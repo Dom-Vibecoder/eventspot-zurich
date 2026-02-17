@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <meta name="theme-color" content="#0c0a1d"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="EventSpot"/>
+  <title>EventSpot Zürich</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script>
+    window.MAPS_KEY = "AIzaSyB_fNBv6ZLw5wm9fKwGeJ12L4p6sVM0hQg";
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAg6oTGoJa_Yp7flssU5OpyXvJ2KxoA0yA",
+      authDomain: "eventspot-zurich.firebaseapp.com",
+      projectId: "eventspot-zurich",
+      storageBucket: "eventspot-zurich.firebasestorage.app",
+      messagingSenderId: "210810461333",
+      appId: "1:210810461333:web:1c8283baba7e0fef364f9c"
+    };
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    :root{--bg-deep:#0c0a1d;--bg-card:#161331;--bg-surface:#1e1a3a;--bg-elevated:#2a2550;--accent:#7c6aff;--accent-light:#a99cff;--accent-glow:rgba(124,106,255,0.25);--green:#34d399;--green-dim:#0d9f6e;--red:#f87171;--text-primary:#eee8ff;--text-secondary:#8b83a8;--text-muted:#5c5578;--border:rgba(255,255,255,0.06);--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+    body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg-deep);color:var(--text-primary);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+    button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    input,textarea{font-family:inherit}
+    #app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+    #header-zone{flex-shrink:0;z-index:100;position:relative}
+    #map-zone{flex:1;position:relative;overflow:hidden}
+    #map{width:100%;height:100%;position:absolute;inset:0}
+    #map-overlays{position:absolute;inset:0;pointer-events:none;z-index:10}
+    #map-overlays>*{pointer-events:auto}
+    #card-zone{position:absolute;bottom:0;left:0;right:0;z-index:200;pointer-events:none}
+    #card-zone>*{pointer-events:auto}
+    #modal-zone{position:fixed;inset:0;z-index:500;pointer-events:none}
+    #modal-zone>*{pointer-events:auto}
+    #toast-zone{position:fixed;top:0;left:0;right:0;z-index:900;pointer-events:none;display:flex;justify-content:center}
+    #toast-zone>*{pointer-events:auto}
+    #auth-zone{position:fixed;inset:0;z-index:800}
+    .splash{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 40%,#1e1a3a 0%,#0c0a1d 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+    .splash.out{opacity:0;visibility:hidden;pointer-events:none}
+    .splash-logo{font-size:48px;font-weight:900;letter-spacing:-0.05em;color:#fff}
+    .splash-logo span{color:var(--accent)}
+    .splash-sub{color:var(--text-secondary);font-size:14px;margin-top:6px;font-weight:500}
+    .splash-spinner{width:40px;height:40px;margin-top:36px;border-radius:50%;border:3px solid var(--bg-elevated);border-top-color:var(--accent);animation:spin .7s linear infinite}
+    .header{background:linear-gradient(180deg,#13102b 0%,#0c0a1d 100%);padding:calc(12px + var(--safe-top)) 16px 10px;border-bottom:1px solid var(--border)}
+    .header-top{display:flex;justify-content:space-between;align-items:center}
+    .logo{font-size:22px;font-weight:900;letter-spacing:-0.04em}
+    .logo span{color:var(--accent)}
+    .header-sub{font-size:11px;color:var(--text-secondary);margin-top:1px;font-weight:500}
+    .header-actions{display:flex;gap:6px;align-items:center}
+    .h-btn{height:36px;border-radius:10px;border:1.5px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:600;padding:0 10px;transition:all .15s}
+    .h-btn:hover,.h-btn.on{background:var(--accent-glow);border-color:var(--accent);color:var(--accent-light)}
+    .avatar{width:32px;height:32px;border-radius:10px;border:2px solid var(--accent);overflow:hidden;cursor:pointer}
+    .avatar img{width:100%;height:100%;object-fit:cover}
+    .filters{display:flex;gap:6px;padding:8px 16px;overflow-x:auto;background:var(--bg-deep);border-bottom:1px solid var(--border);scrollbar-width:none}
+    .filters::-webkit-scrollbar{display:none}
+    .chip{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);transition:all .15s;flex-shrink:0}
+    .chip.on{background:var(--accent-glow);border-color:var(--accent);color:var(--accent-light)}
+    .map-legend{position:absolute;top:10px;left:10px;background:rgba(12,10,29,0.88);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;padding:8px 14px;display:flex;gap:14px;font-size:11px;color:var(--text-secondary);font-weight:500}
+    .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .locate-btn{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(12,10,29,0.88);backdrop-filter:blur(12px);color:var(--accent-light);display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .locate-btn:active{background:var(--accent-glow)}
+    .map-stats{position:absolute;bottom:calc(16px + var(--safe-bottom));left:12px;display:flex;gap:8px}
+    .stat-badge{background:rgba(12,10,29,0.88);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:12px;padding:6px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px}
+    .fab{position:absolute;bottom:calc(16px + var(--safe-bottom));right:14px;width:56px;height:56px;border-radius:16px;border:none;background:linear-gradient(135deg,#7c6aff,#5b47e0);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 28px rgba(91,71,224,0.45);transition:transform .15s}
+    .fab:active{transform:scale(.92)}
+    .sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.35);animation:fadeIn .2s}
+    .sheet{position:absolute;bottom:0;left:0;right:0;background:var(--bg-card);border-radius:24px 24px 0 0;box-shadow:0 -10px 50px rgba(0,0,0,0.5);max-height:65vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;animation:slideUp .35s cubic-bezier(.34,1.56,.64,1)}
+    .sheet-inner{padding:16px 20px calc(20px + var(--safe-bottom))}
+    .sheet-handle{width:40px;height:4px;border-radius:2px;background:var(--bg-elevated);margin:0 auto 14px}
+    .sheet-close{width:30px;height:30px;border-radius:50%;background:var(--bg-elevated);border:none;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .card-title{font-size:20px;font-weight:800;letter-spacing:-0.02em;line-height:1.2}
+    .card-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)}
+    .card-desc{font-size:13px;color:var(--text-secondary);line-height:1.55;padding-left:12px;border-left:3px solid}
+    .cred-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+    .cred-label{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+    .cred-nums{font-size:11px;color:var(--text-muted)}
+    .cred-bar{height:6px;border-radius:3px;background:var(--bg-elevated);overflow:hidden}
+    .cred-fill{height:100%;border-radius:3px;transition:width .5s}
+    .verify-box{border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;border:1.5px solid;margin-bottom:14px}
+    .verify-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .verify-title{font-size:12px;font-weight:700;margin-bottom:1px}
+    .verify-sub{font-size:11px;color:var(--text-muted);line-height:1.4}
+    .verify-btn{padding:7px 12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#5b47e0);color:#fff;border:none;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 10px rgba(124,106,255,0.3)}
+    .action-row{display:flex;gap:8px}
+    .btn-action{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:13px 14px;border-radius:14px;font-size:14px;font-weight:700;transition:all .2s;border:none}
+    .btn-yes{background:linear-gradient(135deg,var(--green),var(--green-dim));color:#fff;box-shadow:0 4px 16px rgba(52,211,153,0.25)}
+    .btn-no{background:var(--bg-elevated);color:var(--text-secondary);border:2px solid var(--border)!important}
+    .btn-action.off{opacity:.45;cursor:not-allowed;filter:grayscale(.4)}
+    .btn-yes.off{background:var(--bg-elevated);box-shadow:none}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s}
+    .modal{background:var(--bg-card);border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .35s cubic-bezier(.34,1.56,.64,1);color:var(--text-primary)}
+    .modal-inner{padding:16px 20px calc(24px + var(--safe-bottom))}
+    .modal h2{font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:16px}
+    .field-label{font-size:11px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.04em}
+    .input{width:100%;padding:11px 14px;border-radius:12px;border:2px solid var(--bg-elevated);font-size:14px;outline:none;background:var(--bg-surface);color:var(--text-primary);transition:border-color .2s}
+    .input:focus{border-color:var(--accent)}
+    .input::placeholder{color:var(--text-muted)}
+    .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .cat-btn{display:flex;align-items:center;gap:4px;padding:8px 6px;border-radius:10px;border:2px solid var(--bg-elevated);background:transparent;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .15s}
+    .cat-btn.on{border-color:var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent)}
+    .dur-row{display:flex;gap:6px;flex-wrap:wrap}
+    .dur-btn{padding:7px 12px;border-radius:10px;border:2px solid var(--bg-elevated);background:transparent;font-size:12px;font-weight:600;color:var(--text-muted);transition:all .15s}
+    .dur-btn.on{border-color:var(--accent);color:var(--accent-light);background:var(--accent-glow)}
+    .submit-btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;transition:all .2s}
+    .auth-overlay{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,#1e1a3a 0%,#0c0a1d 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+    .auth-logo{font-size:44px;font-weight:900;letter-spacing:-0.05em;margin-bottom:6px}
+    .auth-logo span{color:var(--accent)}
+    .auth-sub{color:var(--text-secondary);font-size:15px;margin-bottom:36px;max-width:280px;line-height:1.5}
+    .google-btn{display:flex;align-items:center;gap:10px;padding:14px 28px;border-radius:14px;border:2px solid var(--border);background:var(--bg-surface);color:var(--text-primary);font-size:15px;font-weight:600;transition:all .2s}
+    .google-btn:hover{border-color:var(--accent);background:var(--accent-glow)}
+    .google-btn img{width:22px;height:22px}
+    .skip-btn{margin-top:16px;background:none;border:none;color:var(--text-muted);font-size:13px;font-weight:500;text-decoration:underline}
+    .toast{margin-top:calc(12px + var(--safe-top));background:var(--bg-card);border:1px solid var(--border);backdrop-filter:blur(12px);color:var(--text-primary);padding:10px 20px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.4);white-space:nowrap;animation:toastIn .3s}
+    .empty-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--text-muted);font-size:14px;pointer-events:none}
+    .empty-hint .big{font-size:36px;margin-bottom:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes toastIn{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(124,106,255,0.5)}50%{box-shadow:0 0 0 8px rgba(124,106,255,0)}}
+  </style>
+</head>
+<body>
+<div class="splash" id="splash"><div class="splash-logo">Event<span>Spot</span></div><div class="splash-sub">Zürich · Live Events entdecken</div><div class="splash-spinner"></div></div>
+<div id="app"><div id="header-zone"></div><div id="map-zone"><div id="map"></div><div id="map-overlays"></div><div id="card-zone"></div></div></div>
+<div id="modal-zone"></div><div id="toast-zone"></div><div id="auth-zone"></div>
+<script>
+const I={music:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',food:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',bonfire:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 0 0 .5 4 3 5.5a6 6 0 011.5 4c0 3.04-2.35 5.5-5.25 5.5h-.5C9.35 16.5 7 14.04 7 11c0-.67.12-1.3.34-1.88"/></svg>',party:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3L2 22l10.7-3.79"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01"/></svg>',community:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',protest:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg>',market:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>',sport:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5H4a1 1 0 00-1 1v9a1 1 0 001 1h2.5M17.5 6.5H20a1 1 0 011 1v9a1 1 0 01-1 1h-2.5"/><rect x="6.5" y="3" width="4" height="18" rx="1"/><rect x="13.5" y="3" width="4" height="18" rx="1"/></svg>',art:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.39-.15-.74-.39-1.02-.24-.29-.38-.63-.38-1.01 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-9.5-10-9.5z"/></svg>',filter:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',plus:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',x:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',check:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',xCircle:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',clock:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',eye:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',nav:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>',pin:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',crosshair:'<svg width="W" height="W" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>'};
+function ic(n,s){return(I[n]||'').replace(/W/g,s||16)}
+const CATS={music:{icon:'music',label:'Musik',color:'#e040fb'},food:{icon:'food',label:'Essen',color:'#ff6d00'},bonfire:{icon:'bonfire',label:'Lagerfeuer',color:'#ff3d00'},party:{icon:'party',label:'Party',color:'#d500f9'},community:{icon:'community',label:'Community',color:'#00b0ff'},protest:{icon:'protest',label:'Demo',color:'#ff1744'},market:{icon:'market',label:'Markt',color:'#00c853'},sport:{icon:'sport',label:'Sport',color:'#2979ff'},art:{icon:'art',label:'Kunst',color:'#aa00ff'}};
+const MAX_DIST=300;
+function haversine(a,b,c,d){const R=6371000,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b),x=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function timeAgo(ts){if(!ts)return'';const s=Math.floor((Date.now()-ts.toDate().getTime())/1000);if(s<60)return'gerade eben';if(s<3600)return'vor '+Math.floor(s/60)+' Min';if(s<86400)return'vor '+Math.floor(s/3600)+' Std';return'vor '+Math.floor(s/86400)+' Tagen'}
+const MAP_STYLE=[{elementType:"geometry",stylers:[{color:"#0c0a1d"}]},{elementType:"labels.text.fill",stylers:[{color:"#5c5578"}]},{elementType:"labels.text.stroke",stylers:[{color:"#0c0a1d"}]},{featureType:"road",elementType:"geometry",stylers:[{color:"#1e1a3a"}]},{featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#2a2550"}]},{featureType:"road.highway",elementType:"geometry",stylers:[{color:"#2a2550"}]},{featureType:"water",elementType:"geometry",stylers:[{color:"#0f1b2d"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi.park",elementType:"geometry",stylers:[{color:"#111428"}]},{featureType:"transit",stylers:[{visibility:"off"}]},{featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#2a2550"}]}];
+let gmap,db,auth,markers={},allEvents=[],listening=false,mapReady=false;
+let S={user:null,selected:null,filter:'all',filtersOpen:false,addModal:false,verify:'idle',toast:null,toastTimer:null,authScreen:true,fn:'',fc:'music',fd:'',fdur:'1-2 Stunden'};
+firebase.initializeApp(window.FIREBASE_CONFIG);db=firebase.firestore();auth=firebase.auth();
+auth.onAuthStateChanged(function(u){S.user=u;if(u){S.authScreen=false;renderAuth();renderHeader();initMapIfReady()}else{S.authScreen=true;renderAuth()}});
+function signInGoogle(){var p=new firebase.auth.GoogleAuthProvider();auth.signInWithPopup(p).catch(function(){auth.signInWithRedirect(p)})}
+function signInAnon(){auth.signInAnonymously().catch(function(e){showToast('Fehler: '+e.message)})}
+function signOutUser(){auth.signOut();S.authScreen=true;renderAuth()}
+function startListening(){if(listening)return;listening=true;db.collection('events').orderBy('createdAt','desc').onSnapshot(function(snap){allEvents=snap.docs.map(function(d){return Object.assign({id:d.id},d.data())});syncMarkers();renderOverlays();renderHeader()})}
+function getFiltered(){if(S.filter==='all')return allEvents;if(S.filter==='spontaneous')return allEvents.filter(function(e){return e.type==='spontaneous'});if(S.filter==='planned')return allEvents.filter(function(e){return e.type==='planned'});var f=S.filter;return allEvents.filter(function(e){return e.category===f})}
+function syncMarkers(){if(!gmap)return;var vis=getFiltered(),ids={};vis.forEach(function(e){ids[e.id]=true});Object.keys(markers).forEach(function(id){if(!ids[id]){markers[id].setMap(null);delete markers[id]}});vis.forEach(function(ev){if(markers[ev.id]){markers[ev.id].setPosition({lat:ev.lat,lng:ev.lng});return}var cat=CATS[ev.category]||CATS.community;var sp=ev.type==='spontaneous';var color=sp?cat.color:'#34d399';var svgIcon='<svg xmlns="http://www.w3.org/2000/svg" width="44" height="52" viewBox="0 0 44 52"><circle cx="22" cy="20" r="19" fill="'+color+'" stroke="white" stroke-width="2.5"/><polygon points="14,35 22,50 30,35" fill="'+color+'"/><circle cx="22" cy="20" r="8" fill="white" fill-opacity="0.3"/></svg>';var m=new google.maps.Marker({map:gmap,position:{lat:ev.lat,lng:ev.lng},icon:{url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svgIcon),scaledSize:new google.maps.Size(36,42),anchor:new google.maps.Point(18,42)},label:{text:String(ev.confirmed||0),color:'#fff',fontSize:'11px',fontWeight:'700',fontFamily:'Outfit,sans-serif'},title:ev.name,optimized:false});m.addListener('click',function(){selectEvent(ev.id)});markers[ev.id]=m})}
+
+function selectEvent(id){S.selected=allEvents.find(function(e){return e.id===id})||null;S.verify='idle';renderCard();renderOverlays();if(S.selected&&gmap)gmap.panTo({lat:S.selected.lat,lng:S.selected.lng})}
+function closeCard(){S.selected=null;S.verify='idle';renderCard();renderOverlays()}
+function verifyLocation(){if(!navigator.geolocation){S.verify='unavailable';renderCard();return}S.verify='checking';renderCard();navigator.geolocation.getCurrentPosition(function(p){var d=haversine(p.coords.latitude,p.coords.longitude,S.selected.lat,S.selected.lng);S.verify=d<=MAX_DIST?'nearby':'too_far';renderCard()},function(e){S.verify=e.code===1?'denied':'unavailable';renderCard()},{enableHighAccuracy:true,timeout:10000,maximumAge:30000})}
+function confirmEvent(){if(!S.selected||S.verify!=='nearby')return;db.collection('events').doc(S.selected.id).update({confirmed:firebase.firestore.FieldValue.increment(1)});showToast('✅ Bestätigt! Danke.')}
+function declineEvent(){if(!S.selected||S.verify!=='nearby')return;db.collection('events').doc(S.selected.id).update({declined:firebase.firestore.FieldValue.increment(1)});showToast('❌ Abgelehnt. Danke.')}
+function submitEvent(){if(!S.fn.trim())return;var doSubmit=function(lat,lng){db.collection('events').add({name:S.fn.trim(),type:'spontaneous',category:S.fc,lat:lat,lng:lng,time:'Jetzt \u00b7 '+S.fdur,description:S.fd||'Neues Event in der Nähe!',confirmed:1,declined:0,postedBy:(S.user&&S.user.displayName)||'Anonym',postedByUid:(S.user&&S.user.uid)||null,createdAt:firebase.firestore.FieldValue.serverTimestamp()});closeAddModal();showToast('\uD83C\uDF89 Event gemeldet!')};if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){doSubmit(p.coords.latitude,p.coords.longitude)},function(){doSubmit(47.3769+(Math.random()-.5)*.01,8.5417+(Math.random()-.5)*.01)},{enableHighAccuracy:true,timeout:8000})}else{doSubmit(47.3769,8.5417)}}
+function openAddModal(){S.addModal=true;renderModal()}
+function closeAddModal(){S.addModal=false;S.fn='';S.fc='music';S.fd='';S.fdur='1-2 Stunden';renderModal()}
+function locateMe(){if(!gmap||!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){gmap.panTo({lat:p.coords.latitude,lng:p.coords.longitude});gmap.setZoom(15)},function(){},{enableHighAccuracy:true,timeout:8000})}
+function setFilter(f){S.filter=f;syncMarkers();renderHeader();renderOverlays()}
+function showToast(m){clearTimeout(S.toastTimer);S.toast=m;renderToast();S.toastTimer=setTimeout(function(){S.toast=null;renderToast()},2500)}
+function renderAuth(){var z=document.getElementById('auth-zone');if(!S.authScreen){z.innerHTML='';z.style.display='none';return}z.style.display='block';z.innerHTML='<div class="auth-overlay"><div class="auth-logo">Event<span>Spot</span></div><p class="auth-sub">Entdecke spontane Events in deiner Nähe. Melde dich an, um Events zu bestätigen und eigene zu erstellen.</p><button class="google-btn" onclick="signInGoogle()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"/>Mit Google anmelden</button><button class="skip-btn" onclick="signInAnon()">Ohne Konto fortfahren</button></div>'}
+function renderHeader(){var f=getFiltered();var u=S.user;var h='<div class="header"><div class="header-top"><div><div class="logo">Event<span>Spot</span></div><div class="header-sub">'+ic('nav',10)+' Zürich \u00b7 '+f.length+' Events aktiv</div></div><div class="header-actions"><button class="h-btn '+(S.filtersOpen?'on':'')+'" onclick="S.filtersOpen=!S.filtersOpen;renderHeader()">'+ic('filter',14)+' Filter</button>'+(u&&!u.isAnonymous?'<div class="avatar" onclick="if(confirm(\'Abmelden?\'))signOutUser()"><img src="'+(u.photoURL||'')+'" alt=""/></div>':'<button class="h-btn" onclick="signInGoogle()">Anmelden</button>')+'</div></div></div>';if(S.filtersOpen){var chips=[{k:'all',l:'Alle'},{k:'spontaneous',l:'\uD83D\uDFE3 Spontan'},{k:'planned',l:'\uD83D\uDFE2 Geplant'}];Object.keys(CATS).forEach(function(k){chips.push({k:k,l:CATS[k].label})});h+='<div class="filters">';chips.forEach(function(c){h+='<button class="chip '+(S.filter===c.k?'on':'')+'" onclick="setFilter(\''+c.k+'\')">'+c.l+'</button>'});h+='</div>'}document.getElementById('header-zone').innerHTML=h}
+function renderOverlays(){var live=allEvents.filter(function(e){return e.type==='spontaneous'}).length;var plan=allEvents.filter(function(e){return e.type==='planned'}).length;var sel=S.selected;var h='<div class="map-legend"><div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--accent)"></div>Spontan</div><div style="display:flex;align-items:center;gap:5px"><div class="legend-dot" style="background:var(--green)"></div>Geplant</div></div>';h+='<button class="locate-btn" onclick="locateMe()">'+ic('crosshair',20)+'</button>';if(!sel){h+='<div class="map-stats"><div class="stat-badge" style="color:var(--accent-light)"><div class="legend-dot" style="background:var(--accent)"></div>'+live+' Live</div><div class="stat-badge" style="color:var(--green)"><div class="legend-dot" style="background:var(--green)"></div>'+plan+' Geplant</div></div>';h+='<button class="fab" onclick="openAddModal()">'+ic('plus',26)+'</button>'}if(allEvents.length===0&&!sel)h+='<div class="empty-hint"><div class="big">\uD83D\uDCCD</div>Noch keine Events.<br>Tippe <b>+</b> um das erste zu melden!</div>';document.getElementById('map-overlays').innerHTML=h}
+function renderCard(){var z=document.getElementById('card-zone');var s=S.selected;if(!s){z.innerHTML='';return}var v=S.verify,canVote=v==='nearby';var cat=CATS[s.category]||CATS.community;var sp=s.type==='spontaneous';var total=(s.confirmed||0)+(s.declined||0);var ratio=total>0?((s.confirmed||0)/total)*100:100;var barClr=ratio>80?'linear-gradient(90deg,#34d399,#0d9f6e)':ratio>50?'linear-gradient(90deg,#fbbf24,#d97706)':'linear-gradient(90deg,#f87171,#dc2626)';var tagBg=sp?cat.color+'22':'rgba(52,211,153,.15)';var tagClr=sp?cat.color:'#34d399';var posted=s.createdAt?timeAgo(s.createdAt):(s.postedAgo||'');var vBg=canVote?'rgba(52,211,153,.08)':v==='too_far'?'rgba(248,113,113,.08)':'var(--bg-surface)';var vBorder=canVote?'#34d39940':v==='too_far'?'#f8717140':'var(--bg-elevated)';var vIconBg=canVote?'rgba(52,211,153,.15)':v==='too_far'?'rgba(248,113,113,.15)':'var(--bg-elevated)';var vIcon=v==='checking'?'<div style="width:16px;height:16px;border-radius:50%;border:2.5px solid var(--bg-elevated);border-top-color:var(--accent);animation:spin .7s linear infinite"></div>':canVote?ic('nav',15):ic('pin',15);var vTitleClr=canVote?'var(--green)':v==='too_far'?'var(--red)':'var(--text-primary)';var vTitle=v==='checking'?'Standort wird geprüft\u2026':canVote?'Du bist in der N\u00e4he \u2713':v==='too_far'?'Du bist zu weit weg':v==='denied'?'Standortzugriff verweigert':v==='unavailable'?'Standort nicht verf\u00fcgbar':'Standort-Verifizierung n\u00f6tig';var vSub=v==='checking'?'Einen Moment\u2026':canVote?'Du kannst jetzt abstimmen.':v==='too_far'?'Du musst innerhalb von 300m sein.':v==='denied'?'Bitte erlaube Standortzugriff.':v==='unavailable'?'Geolocation nicht unterst\u00fctzt.':'Du musst vor Ort sein, um abzustimmen.';var showVBtn=v==='idle'||v==='too_far'||v==='denied';z.innerHTML='<div class="sheet-backdrop" onclick="closeCard()"></div><div class="sheet" onclick="event.stopPropagation()"><div class="sheet-inner"><div class="sheet-handle"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="flex:1"><div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap"><span class="tag" style="background:'+tagBg+';color:'+tagClr+'">'+ic(cat.icon,11)+' '+(sp?'Spontan':'Geplant')+'</span><span class="tag" style="background:var(--bg-elevated);color:var(--text-secondary)">'+cat.label+'</span></div><h2 class="card-title">'+esc(s.name)+'</h2></div><button class="sheet-close" onclick="closeCard()">'+ic('x',14)+'</button></div><div class="card-meta" style="margin-bottom:10px"><span style="display:flex;align-items:center;gap:4px;font-weight:500">'+ic('clock',12)+' '+esc(s.time||'')+'</span><span style="display:flex;align-items:center;gap:4px;color:var(--text-muted);font-size:11px">'+ic('eye',11)+' '+esc(s.postedBy||'Anonym')+' \u00b7 '+posted+'</span></div><p class="card-desc" style="border-color:'+(sp?cat.color:'#34d399')+';margin-bottom:14px">'+esc(s.description||'')+'</p><div style="margin-bottom:14px"><div class="cred-row"><span class="cred-label">Glaubw\u00fcrdigkeit</span><span class="cred-nums">'+(s.confirmed||0)+' \u2713 \u00b7 '+(s.declined||0)+' \u2717</span></div><div class="cred-bar"><div class="cred-fill" style="background:'+barClr+';width:'+ratio+'%"></div></div></div><div class="verify-box" style="background:'+vBg+';border-color:'+vBorder+'"><div class="verify-icon" style="background:'+vIconBg+';color:'+vTitleClr+'">'+vIcon+'</div><div style="flex:1"><div class="verify-title" style="color:'+vTitleClr+'">'+vTitle+'</div><div class="verify-sub">'+vSub+'</div></div>'+(showVBtn?'<button class="verify-btn" onclick="verifyLocation()">\uD83D\uDCCD Pr\u00fcfen</button>':'')+'</div><div class="action-row"><button class="btn-action btn-yes '+(canVote?'':'off')+'" '+(canVote?'onclick="confirmEvent()"':'')+'>'+ic('check',17)+' Best\u00e4tigen</button><button class="btn-action btn-no '+(canVote?'':'off')+'" '+(canVote?'onclick="declineEvent()"':'')+'>'+ic('xCircle',17)+' Ablehnen</button></div>'+(!canVote&&v!=='checking'?'<p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:8px">\uD83D\uDCCD Verifiziere deinen Standort zum Abstimmen</p>':'')+'</div></div>'}
+function renderModal(){var z=document.getElementById('modal-zone');if(!S.addModal){z.innerHTML='';z.style.pointerEvents='none';return}z.style.pointerEvents='auto';var catBtns='';Object.keys(CATS).forEach(function(k){var c=CATS[k];catBtns+='<button class="cat-btn '+(S.fc===k?'on':'')+'" style="--c:'+c.color+'" onclick="S.fc=\''+k+'\';renderModal()">'+ic(c.icon,12)+' '+c.label+'</button>'});var durBtns='';["< 1 Stunde","1-2 Stunden","3-5 Stunden","Ganzer Tag"].forEach(function(d){durBtns+='<button class="dur-btn '+(S.fdur===d?'on':'')+'" onclick="S.fdur=\''+d.replace(/'/g,"\\'")+'\';renderModal()">'+d+'</button>'});var ok=S.fn.trim().length>0;z.innerHTML='<div class="modal-bg" onclick="closeAddModal()"><div class="modal" onclick="event.stopPropagation()"><div class="modal-inner"><div class="sheet-handle"></div><h2>Neues Event melden \uD83D\uDCCD</h2><label class="field-label">Event Name *</label><input class="input" placeholder="z.B. Live Musik am See" value="'+esc(S.fn)+'" oninput="S.fn=this.value" style="margin-bottom:14px"/><label class="field-label">Kategorie</label><div class="cat-grid" style="margin-bottom:14px">'+catBtns+'</div><label class="field-label">Beschreibung</label><textarea class="input" placeholder="Was passiert dort?" rows="3" oninput="S.fd=this.value" style="margin-bottom:14px;resize:vertical">'+esc(S.fd)+'</textarea><label class="field-label">Gesch\u00e4tzte Dauer</label><div class="dur-row" style="margin-bottom:20px">'+durBtns+'</div><button class="submit-btn" style="background:'+(ok?'linear-gradient(135deg,#7c6aff,#5b47e0)':'var(--bg-elevated)')+';color:'+(ok?'#fff':'var(--text-muted)')+';box-shadow:'+(ok?'0 4px 20px rgba(124,106,255,.35)':'none')+'" '+(ok?'onclick="submitEvent()"':'')+'>Event melden \uD83D\uDE80</button></div></div></div>'}
+function renderToast(){var z=document.getElementById('toast-zone');z.innerHTML=S.toast?'<div class="toast">'+S.toast+'</div>':''}
+function initMapIfReady(){if(mapReady||S.authScreen||!window.google)return;var el=document.getElementById('map');if(!el)return;mapReady=true;gmap=new google.maps.Map(el,{center:{lat:47.3769,lng:8.5417},zoom:14,styles:MAP_STYLE,disableDefaultUI:true,zoomControl:false,mapTypeControl:false,streetViewControl:false,fullscreenControl:false,gestureHandling:'greedy'});startListening();renderOverlays();if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){gmap.panTo({lat:p.coords.latitude,lng:p.coords.longitude})},function(){},{timeout:5000})}}
+window.initMapCallback=function(){initMapIfReady()};
+(function(){var s=document.createElement('script');s.src='https://maps.googleapis.com/maps/api/js?key='+window.MAPS_KEY+'&callback=initMapCallback&v=weekly';s.async=true;s.defer=true;document.head.appendChild(s)})();
+renderAuth();
+setTimeout(function(){document.getElementById('splash').classList.add('out')},1200);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+</script>
+</body>
+</html>
