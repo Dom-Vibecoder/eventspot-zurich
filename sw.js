@@ -1,22 +1,11 @@
-const CACHE = 'eventspot-v3';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
+var C = 'es-v5';
+self.addEventListener('install', function(e) { self.skipWaiting(); });
+self.addEventListener('activate', function(e) {
+  e.waitUntil(caches.keys().then(function(ks) {
+    return Promise.all(ks.filter(function(k){return k!==C}).map(function(k){return caches.delete(k)}));
+  }));
   self.clients.claim();
 });
-
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('googleapis') || e.request.url.includes('firebase') || e.request.url.includes('gstatic')) return;
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
+self.addEventListener('fetch', function(e) {
+  e.respondWith(fetch(e.request).catch(function() { return caches.match(e.request); }));
 });

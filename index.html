@@ -1,1132 +1,685 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <meta name="theme-color" content="#08071a"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="EventSpot"/>
-  <title>EventSpot Zürich</title>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0818">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>EventSpot Zürich</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --bg:#0a0818; --card:#14112e; --surface:#1c1838; --raised:#28234a;
+  --accent:#7c6aff; --accent2:#a99cff; --glow:rgba(124,106,255,.2);
+  --green:#34d399; --greend:#0d9f6e; --red:#f87171;
+  --t1:#ede8ff; --t2:#8a82a6; --t3:#5a5374;
+  --border:rgba(255,255,255,.07);
+  --top:env(safe-area-inset-top,0px); --bot:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--t1);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit}
 
-  <script>
-    window.MAPS_KEY = "AIzaSyB_fNBv6ZLw5wm9fKwGeJ12L4p6sVM0hQg";
-    window.FB = {
-      apiKey: "AIzaSyAg6oTGoJa_Yp7flssU5OpyXvJ2KxoA0yA",
-      authDomain: "eventspot-zurich.firebaseapp.com",
-      projectId: "eventspot-zurich",
-      storageBucket: "eventspot-zurich.firebasestorage.app",
-      messagingSenderId: "210810461333",
-      appId: "1:210810461333:web:1c8283baba7e0fef364f9c"
-    };
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+/* LAYOUT */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#zH{flex-shrink:0;z-index:100}
+#zM{flex:1;position:relative;overflow:hidden}
+#map{position:absolute;inset:0}
+#zO{position:absolute;inset:0;pointer-events:none;z-index:10}
+#zO>*{pointer-events:auto}
+#zC{position:absolute;bottom:0;left:0;right:0;z-index:200;pointer-events:none}
+#zC>*{pointer-events:auto}
+#zMo{position:fixed;inset:0;z-index:500;pointer-events:none}
+#zMo>*{pointer-events:auto}
+#zT{position:fixed;top:0;left:0;right:0;z-index:900;pointer-events:none;display:flex;justify-content:center}
+#zT>*{pointer-events:auto}
+#zA{position:fixed;inset:0;z-index:800}
 
-  <style>
-    :root {
-      --bg: #08071a;
-      --surface: #12103a;
-      --elevated: #1e1b4b;
-      --border: rgba(255,255,255,0.07);
-      --accent: #7c5cfc;
-      --accent2: #a78bfa;
-      --cyan: #22d3ee;
-      --green: #34d399;
-      --red: #f87171;
-      --orange: #fb923c;
-      --text: #e2e0ff;
-      --muted: #7c78a0;
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bot: env(safe-area-inset-bottom, 0px);
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
-    body {
-      font-family: 'DM Sans', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-      -webkit-font-smoothing: antialiased;
-    }
-    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 30%,#1c1838,#0a0818 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s,visibility .5s}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+#splash h1{font-size:42px;font-weight:900;letter-spacing:-.04em}
+#splash h1 span{color:var(--accent)}
+#splash p{color:var(--t2);font-size:13px;margin-top:4px}
+.spinner{width:32px;height:32px;margin-top:28px;border-radius:50%;border:3px solid var(--raised);border-top-color:var(--accent);animation:spin .6s linear infinite}
 
-    /* ── MAP (PERSISTENT – never replaced) ── */
-    #map {
-      position: fixed; inset: 0;
-      width: 100%; height: 100%;
-      z-index: 0;
-    }
+/* AUTH */
+.auth-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,#1c1838,#0a0818 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.auth-bg h1{font-size:38px;font-weight:900;letter-spacing:-.04em;margin-bottom:4px}
+.auth-bg h1 span{color:var(--accent)}
+.auth-bg p{color:var(--t2);font-size:14px;margin-bottom:28px;max-width:260px;line-height:1.5}
+.gbtn{display:flex;align-items:center;gap:10px;padding:13px 26px;border-radius:14px;border:2px solid var(--border);background:var(--surface);font-size:15px;font-weight:600}
+.gbtn img{width:20px;height:20px}
+.skipbtn{margin-top:14px;color:var(--t3);font-size:13px;text-decoration:underline}
 
-    /* ── UI OVERLAY ── */
-    #ui {
-      position: fixed; inset: 0;
-      pointer-events: none;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-    }
-    #ui > * { pointer-events: auto; }
+/* HEADER */
+.hdr{background:linear-gradient(180deg,#110e28,var(--bg));padding:calc(10px + var(--top)) 14px 8px;border-bottom:1px solid var(--border)}
+.hdr-row{display:flex;justify-content:space-between;align-items:center}
+.hdr-logo{font-size:20px;font-weight:900;letter-spacing:-.03em}
+.hdr-logo span{color:var(--accent)}
+.hdr-sub{font-size:10px;color:var(--t2);margin-top:1px;font-weight:500}
+.hdr-r{display:flex;gap:6px;align-items:center}
+.hbtn{height:32px;border-radius:9px;border:1.5px solid var(--border);color:var(--t2);display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:0 9px}
+.hbtn.on{background:var(--glow);border-color:var(--accent);color:var(--accent2)}
+.hav{width:28px;height:28px;border-radius:8px;border:2px solid var(--accent);overflow:hidden;cursor:pointer}
+.hav img{width:100%;height:100%;object-fit:cover}
 
-    /* ── HEADER ── */
-    #header-zone {
-      padding: calc(var(--safe-top) + 12px) 16px 0;
-    }
-    .header {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--text);
-    }
-    .logo span { color: var(--accent2); }
+/* CHIPS */
+.chips{display:flex;gap:5px;padding:6px 14px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--border);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:4px 11px;border-radius:16px;font-size:10px;font-weight:600;white-space:nowrap;border:1.5px solid var(--border);color:var(--t3);flex-shrink:0}
+.chip.on{background:var(--glow);border-color:var(--accent);color:var(--accent2)}
 
-    .header-actions { display: flex; gap: 8px; align-items: center; }
+/* HUD */
+.legend{position:absolute;top:8px;left:8px;background:rgba(10,8,24,.85);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:10px;padding:5px 11px;display:flex;gap:12px;font-size:10px;color:var(--t2);font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.locbtn{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:rgba(10,8,24,.85);backdrop-filter:blur(10px);color:var(--accent2);display:flex;align-items:center;justify-content:center}
+.stats{position:absolute;bottom:calc(12px + var(--bot));left:10px;display:flex;gap:6px}
+.stat{background:rgba(10,8,24,.85);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:10px;padding:4px 10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px}
+.fab{position:absolute;bottom:calc(12px + var(--bot));right:12px;width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#7c6aff,#5b47e0);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(91,71,224,.4)}
+.fab:active{transform:scale(.9)}
 
-    .btn-icon {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: rgba(30, 27, 75, 0.9);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s;
-    }
-    .btn-icon:active { background: var(--elevated); }
+/* CARD */
+.cbg{position:absolute;inset:0;background:rgba(0,0,0,.3);animation:fadeIn .15s}
+.csheet{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -6px 36px rgba(0,0,0,.4);max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;animation:slideUp .25s cubic-bezier(.34,1.4,.64,1)}
+.cin{padding:14px 16px calc(16px + var(--bot))}
+.grab{width:32px;height:3px;border-radius:2px;background:var(--raised);margin:0 auto 10px}
+.closex{width:26px;height:26px;border-radius:50%;background:var(--raised);color:var(--t2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:14px;font-size:9px;font-weight:600}
+.ctitle{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.cmeta{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--t2)}
+.cdesc{font-size:12px;color:var(--t2);line-height:1.5;padding-left:10px;border-left:3px solid}
+.ctrack{height:5px;border-radius:3px;background:var(--raised);overflow:hidden}
+.cfill{height:100%;border-radius:3px;transition:width .4s}
+.vbox{border-radius:11px;padding:9px;display:flex;align-items:center;gap:8px;border:1.5px solid;margin-bottom:10px}
+.vico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vt{font-size:11px;font-weight:700}
+.vsub{font-size:10px;color:var(--t3);line-height:1.3}
+.vbtn{padding:5px 10px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b47e0);color:#fff;font-size:10px;font-weight:700;white-space:nowrap}
+.acts{display:flex;gap:6px}
+.abtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:11px;border-radius:11px;font-size:13px;font-weight:700}
+.ayes{background:linear-gradient(135deg,var(--green),var(--greend));color:#fff;box-shadow:0 3px 12px rgba(52,211,153,.2)}
+.ano{background:var(--raised);color:var(--t2);border:1.5px solid var(--border)}
+.abtn.off{opacity:.35;pointer-events:none;filter:grayscale(.3)}
+.ayes.off{background:var(--raised);box-shadow:none}
 
-    .user-avatar {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--cyan));
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Syne', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      border: 2px solid rgba(255,255,255,0.15);
-    }
+/* MODAL */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .15s}
+.msheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:460px;max-height:85vh;overflow-y:auto;animation:slideUp .25s cubic-bezier(.34,1.4,.64,1)}
+.min{padding:14px 16px calc(20px + var(--bot))}
+.msheet h2{font-size:17px;font-weight:800;margin-bottom:12px}
+.lbl{font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.05em}
+.inp{width:100%;padding:9px 11px;border-radius:9px;border:2px solid var(--raised);font-size:13px;background:var(--surface);color:var(--t1);outline:none}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--t3)}
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.copt{display:flex;align-items:center;gap:3px;padding:6px 4px;border-radius:8px;border:1.5px solid var(--raised);font-size:10px;font-weight:600;color:var(--t3)}
+.copt.on{border-color:var(--cc);color:var(--cc);background:color-mix(in srgb,var(--cc) 8%,transparent)}
+.dgrid{display:flex;gap:4px;flex-wrap:wrap}
+.dopt{padding:5px 10px;border-radius:8px;border:1.5px solid var(--raised);font-size:11px;font-weight:600;color:var(--t3)}
+.dopt.on{border-color:var(--accent);color:var(--accent2);background:var(--glow)}
+.sendbtn{width:100%;padding:13px;border-radius:11px;font-size:14px;font-weight:700}
 
-    /* ── FILTER TABS ── */
-    .filter-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      display: flex;
-      gap: 8px;
-      padding: 2px 0 4px;
-    }
-    .filter-scroll::-webkit-scrollbar { display: none; }
+/* TOAST */
+.toast{margin-top:calc(8px + var(--top));background:var(--card);border:1px solid var(--border);color:var(--t1);padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:toastPop .2s}
 
-    .tab {
-      flex-shrink: 0;
-      height: 36px;
-      padding: 0 14px;
-      border-radius: 18px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      display: flex; align-items: center; gap: 5px;
-      background: rgba(18, 16, 58, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      transition: all 0.18s;
-      white-space: nowrap;
-    }
-    .tab.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-      font-weight: 600;
-    }
-    .tab .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-    .tab.live-tab.active { background: #ef4444; border-color: #ef4444; }
-    .tab.ai-tab.active { background: linear-gradient(135deg, #0ea5e9, #22d3ee); border-color: #22d3ee; }
+/* EMPTY */
+.empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--t3);font-size:13px;pointer-events:none}
 
-    /* ── SPACER ── */
-    #ui-spacer { flex: 1; pointer-events: none; }
-
-    /* ── FAB (Add Event) ── */
-    #fab-zone {
-      padding: 0 16px calc(var(--safe-bot) + 90px);
-      display: flex;
-      justify-content: flex-end;
-    }
-    .fab {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), #9333ea);
-      box-shadow: 0 4px 20px rgba(124, 92, 252, 0.5);
-      color: #fff;
-      font-size: 26px;
-      display: flex; align-items: center; justify-content: center;
-      border: none;
-      transition: transform 0.18s, box-shadow 0.18s;
-    }
-    .fab:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(124, 92, 252, 0.4); }
-
-    /* ── LOCATE BUTTON ── */
-    #locate-zone {
-      padding: 0 16px 12px;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    /* ── BOTTOM CARD (Event detail) ── */
-    #card-zone {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 20;
-      pointer-events: auto;
-    }
-    .event-card {
-      background: rgba(18, 16, 58, 0.97);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border-top: 1px solid var(--border);
-      border-radius: 24px 24px 0 0;
-      padding: 16px 20px calc(var(--safe-bot) + 20px);
-      animation: slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .card-handle {
-      width: 36px; height: 4px;
-      border-radius: 2px;
-      background: var(--border);
-      margin: 0 auto 16px;
-    }
-    .card-cat-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .cat-pill {
-      display: flex; align-items: center; gap: 5px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-      border: 1px solid;
-    }
-    .live-badge {
-      display: flex; align-items: center; gap: 4px;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 600;
-      background: rgba(239, 68, 68, 0.15);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-    .live-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #f87171;
-      animation: blink 1.4s ease-in-out infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-    .card-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      line-height: 1.2;
-    }
-    .card-time {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-    .card-desc {
-      font-size: 14px;
-      color: var(--text);
-      opacity: 0.8;
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-    .card-poster {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    /* Vote section */
-    .vote-section {
-      display: flex;
-      gap: 10px;
-      align-items: stretch;
-    }
-    .vote-btn {
-      flex: 1;
-      padding: 11px;
-      border-radius: 14px;
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.18s;
-      border: 1.5px solid;
-    }
-    .vote-btn.confirm {
-      background: rgba(52, 211, 153, 0.1);
-      border-color: rgba(52, 211, 153, 0.3);
-      color: var(--green);
-    }
-    .vote-btn.confirm:active, .vote-btn.confirm.selected {
-      background: rgba(52, 211, 153, 0.25);
-      border-color: var(--green);
-    }
-    .vote-btn.decline {
-      background: rgba(248, 113, 113, 0.1);
-      border-color: rgba(248, 113, 113, 0.3);
-      color: var(--red);
-    }
-    .vote-btn.decline:active, .vote-btn.decline.selected {
-      background: rgba(248, 113, 113, 0.25);
-      border-color: var(--red);
-    }
-    .vote-btn.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .vote-count {
-      font-size: 16px;
-      font-weight: 700;
-    }
-    .vote-voted-msg {
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 8px;
-    }
-
-    .card-close {
-      position: absolute;
-      top: 16px; right: 20px;
-      color: var(--muted);
-      font-size: 20px;
-      width: 30px; height: 30px;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* ── MODAL ── */
-    #modal-zone {
-      position: fixed; inset: 0;
-      z-index: 50;
-      display: flex; align-items: flex-end;
-    }
-    .modal-backdrop {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
-      animation: fadeIn 0.2s;
-    }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .modal-sheet {
-      position: relative;
-      width: 100%;
-      background: var(--surface);
-      border-radius: 24px 24px 0 0;
-      border-top: 1px solid var(--border);
-      padding: 16px 20px calc(var(--safe-bot) + 24px);
-      animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .modal-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    /* Form fields */
-    .form-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .form-field {
-      width: 100%;
-      background: var(--elevated);
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      margin-bottom: 16px;
-      outline: none;
-      transition: border-color 0.18s;
-    }
-    .form-field:focus { border-color: var(--accent); }
-    textarea.form-field { resize: none; min-height: 80px; }
-
-    /* Category grid in modal */
-    .cat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .cat-btn {
-      padding: 10px 6px;
-      border-radius: 12px;
-      background: var(--elevated);
-      border: 1.5px solid var(--border);
-      color: var(--text);
-      font-size: 12px;
-      font-weight: 500;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.18s;
-    }
-    .cat-btn .cat-emoji { font-size: 20px; }
-    .cat-btn.selected {
-      border-color: var(--accent);
-      background: rgba(124, 92, 252, 0.15);
-      color: var(--accent2);
-    }
-
-    /* Type toggle */
-    .type-toggle {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .type-btn {
-      flex: 1;
-      padding: 10px;
-      border-radius: 12px;
-      background: var(--elevated);
-      border: 1.5px solid var(--border);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.18s;
-    }
-    .type-btn.selected {
-      border-color: var(--accent);
-      background: rgba(124, 92, 252, 0.15);
-      color: var(--accent2);
-    }
-
-    .btn-primary {
-      width: 100%;
-      padding: 15px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), #9333ea);
-      color: #fff;
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      font-weight: 700;
-      margin-top: 4px;
-      transition: opacity 0.18s, transform 0.18s;
-    }
-    .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.4; }
-
-    /* ── AUTH SCREEN ── */
-    #auth-zone {
-      position: fixed; inset: 0;
-      z-index: 100;
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px 24px;
-      text-align: center;
-    }
-    .auth-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 48px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-    .auth-logo span { color: var(--accent2); }
-    .auth-sub {
-      font-size: 15px;
-      color: var(--muted);
-      margin-bottom: 48px;
-    }
-    .btn-google {
-      width: 100%;
-      max-width: 320px;
-      padding: 16px;
-      border-radius: 16px;
-      background: #fff;
-      color: #111;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      font-weight: 600;
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-      transition: transform 0.18s;
-    }
-    .btn-google:active { transform: scale(0.97); }
-    .btn-google svg { width: 22px; height: 22px; flex-shrink: 0; }
-    .auth-skip {
-      margin-top: 16px;
-      color: var(--muted);
-      font-size: 14px;
-      text-decoration: underline;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-
-    /* ── SPLASH ── */
-    #splash {
-      position: fixed; inset: 0;
-      z-index: 200;
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 12px;
-      transition: opacity 0.5s, visibility 0.5s;
-    }
-    #splash.out { opacity: 0; visibility: hidden; }
-    .splash-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 42px;
-      font-weight: 800;
-    }
-    .splash-logo span { color: var(--accent2); }
-    .splash-sub { font-size: 14px; color: var(--muted); }
-    .splash-spinner {
-      width: 28px; height: 28px;
-      border: 2.5px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-top: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── TOAST ── */
-    #toast-zone {
-      position: fixed;
-      top: calc(var(--safe-top) + 100px);
-      left: 50%; transform: translateX(-50%);
-      z-index: 150;
-      pointer-events: none;
-    }
-    .toast {
-      background: var(--elevated);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 20px;
-      border-radius: 24px;
-      font-size: 14px;
-      font-weight: 500;
-      white-space: nowrap;
-      animation: toastAnim 0.3s;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-    }
-    @keyframes toastAnim { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-
-    /* ── LOCATION ACCURACY INDICATOR ── */
-    .loc-accuracy {
-      position: fixed;
-      bottom: calc(var(--safe-bot) + 100px);
-      left: 16px;
-      background: rgba(18, 16, 58, 0.9);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 6px 12px;
-      font-size: 11px;
-      color: var(--muted);
-      z-index: 15;
-      pointer-events: none;
-    }
-  </style>
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastPop{from{transform:translateY(-12px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
-  <div class="splash-logo">Event<span>Spot</span></div>
-  <div class="splash-sub">Zürich · Live Events entdecken</div>
-  <div class="splash-spinner"></div>
-</div>
+<div id="splash"><h1>Event<span>Spot</span></h1><p>Zürich · Live Events entdecken</p><div class="spinner"></div></div>
 
-<!-- MAP — persistent, never touched by JS re-renders -->
-<div id="map"></div>
-
-<!-- UI floating on top -->
-<div id="ui">
-  <div id="header-zone"></div>
-  <div id="ui-spacer"></div>
-  <div id="locate-zone">
-    <button class="btn-icon" onclick="locateUser()" title="Mein Standort">📍</button>
-  </div>
-  <div id="fab-zone">
-    <button class="fab" onclick="openAddEvent()" title="Event melden">+</button>
+<div id="app">
+  <div id="zH"></div>
+  <div id="zM">
+    <div id="map"></div>
+    <div id="zO"></div>
+    <div id="zC"></div>
   </div>
 </div>
-
-<!-- Dynamic zones (safe to replace innerHTML) -->
-<div id="card-zone"></div>
-<div id="modal-zone"></div>
-<div id="toast-zone"></div>
-<div id="auth-zone"></div>
+<div id="zMo"></div>
+<div id="zT"></div>
+<div id="zA"></div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
-const CATS = {
-  music:     { emoji: '🎵', label: 'Musik',       color: '#e040fb' },
-  food:      { emoji: '🍔', label: 'Essen',        color: '#ff6d00' },
-  bonfire:   { emoji: '🔥', label: 'Feuer',        color: '#ff5722' },
-  party:     { emoji: '🎉', label: 'Party',        color: '#d500f9' },
-  community: { emoji: '👥', label: 'Community',    color: '#00b0ff' },
-  protest:   { emoji: '📢', label: 'Demo',         color: '#ff1744' },
-  market:    { emoji: '🛒', label: 'Markt',        color: '#00c853' },
-  sport:     { emoji: '⚽', label: 'Sport',        color: '#2979ff' },
-  art:       { emoji: '🎨', label: 'Kunst',        color: '#aa00ff' },
-  ai:        { emoji: '🤖', label: 'AI Event',     color: '#22d3ee' },
+/* =====================
+   CONFIG
+   ===================== */
+var MAPS_KEY = "AIzaSyB_fNBv6ZLw5wm9fKwGeJ12L4p6sVM0hQg";
+var FB = {
+  apiKey: "AIzaSyAg6oTGoJa_Yp7flssU5OpyXvJ2KxoA0yA",
+  authDomain: "eventspot-zurich.firebaseapp.com",
+  projectId: "eventspot-zurich",
+  storageBucket: "eventspot-zurich.firebasestorage.app",
+  messagingSenderId: "210810461333",
+  appId: "1:210810461333:web:1c8283baba7e0fef364f9c"
 };
 
-const FILTERS = [
-  { id: 'all',         label: 'Alle',       icon: '🗺️' },
-  { id: 'spontaneous', label: 'Live',       icon: '🔴', cls: 'live-tab' },
-  { id: 'planned',     label: 'Geplant',   icon: '📅' },
-  { id: 'ai',          label: 'AI Events',  icon: '🤖', cls: 'ai-tab' },
-];
-
-const MAP_STYLE = [
-  {elementType:'geometry',stylers:[{color:'#0e0c20'}]},
-  {elementType:'labels.text.fill',stylers:[{color:'#7b7fa8'}]},
-  {elementType:'labels.text.stroke',stylers:[{color:'#0e0c20'}]},
-  {featureType:'landscape',elementType:'geometry',stylers:[{color:'#12103a'}]},
-  {featureType:'landscape.man_made',elementType:'geometry.stroke',stylers:[{color:'#1e1b4b'}]},
-  {featureType:'poi',elementType:'geometry',stylers:[{color:'#1a183a'}]},
-  {featureType:'poi',elementType:'labels.text.fill',stylers:[{color:'#6f6d94'}]},
-  {featureType:'poi.park',elementType:'geometry.fill',stylers:[{color:'#0a1f0a'}]},
-  {featureType:'poi.park',elementType:'labels.text.fill',stylers:[{color:'#3c6040'}]},
-  {featureType:'road',elementType:'geometry',stylers:[{color:'#1e1b4b'}]},
-  {featureType:'road',elementType:'labels.text.fill',stylers:[{color:'#6f6d94'}]},
-  {featureType:'road.arterial',elementType:'geometry',stylers:[{color:'#252157'}]},
-  {featureType:'road.highway',elementType:'geometry',stylers:[{color:'#2d2870'}]},
-  {featureType:'road.highway',elementType:'geometry.stroke',stylers:[{color:'#1e1b4b'}]},
-  {featureType:'road.highway',elementType:'labels.text.fill',stylers:[{color:'#8b89b5'}]},
-  {featureType:'transit',elementType:'geometry',stylers:[{color:'#1a183a'}]},
-  {featureType:'transit.station',elementType:'labels.text.fill',stylers:[{color:'#6f6d94'}]},
-  {featureType:'water',elementType:'geometry.fill',stylers:[{color:'#06040f'}]},
-  {featureType:'water',elementType:'labels.text.fill',stylers:[{color:'#3d3b5a'}]},
-];
-
-// ─── STATE ───────────────────────────────────────────────
-let gmap = null;
-let mapReady = false;
-let markers = {};        // eventId → google.maps.Marker
-let userMarker = null;
-let userLat = 47.3769, userLng = 8.5417;
-let events = [];
-let user = null;
-
-let S = {
-  filter: 'all',
-  selectedId: null,
-  addModal: false,
-  addForm: { name: '', description: '', time: '', category: 'music', type: 'spontaneous' },
+/* =====================
+   SVG ICONS
+   ===================== */
+function _s(d, sz) {
+  var n = sz || 16;
+  return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+}
+var IC = {
+  music: function(z){return _s('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',z)},
+  food: function(z){return _s('<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>',z)},
+  bonfire: function(z){return _s('<path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3.5-7.5 0 0 .5 4 3 5.5a6 6 0 011.5 4c0 3.04-2.35 5.5-5.25 5.5h-.5C9.35 16.5 7 14.04 7 11c0-.67.12-1.3.34-1.88"/>',z)},
+  party: function(z){return _s('<path d="M5.8 11.3L2 22l10.7-3.79"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01"/>',z)},
+  community: function(z){return _s('<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',z)},
+  protest: function(z){return _s('<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>',z)},
+  market: function(z){return _s('<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>',z)},
+  sport: function(z){return _s('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20M2 12h20"/>',z)},
+  art: function(z){return _s('<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.75 1.5-1.5 0-.39-.15-.74-.39-1.02-.24-.29-.38-.63-.38-1.01 0-.83.67-1.5 1.5-1.5H16c3.31 0 6-2.69 6-6 0-5.52-4.48-9.5-10-9.5z"/>',z)},
+  filter: function(z){return _s('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',z)},
+  plus: function(z){var n=z||16;return '<svg width="'+n+'" height="'+n+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'},
+  x: function(z){return _s('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',z)},
+  check: function(z){return _s('<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',z)},
+  xc: function(z){return _s('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',z)},
+  clock: function(z){return _s('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',z)},
+  eye: function(z){return _s('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',z)},
+  nav: function(z){return _s('<polygon points="3 11 22 2 13 21 11 13 3 11"/>',z)},
+  pin: function(z){return _s('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',z)},
+  cross: function(z){return _s('<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>',z)}
 };
 
-// ─── FIREBASE ────────────────────────────────────────────
-firebase.initializeApp(window.FB);
-const auth = firebase.auth();
-const db = firebase.firestore();
+/* =====================
+   CATEGORIES
+   ===================== */
+var CATS = {
+  music:{icon:'music',label:'Musik',color:'#e040fb'},
+  food:{icon:'food',label:'Essen',color:'#ff6d00'},
+  bonfire:{icon:'bonfire',label:'Lagerfeuer',color:'#ff3d00'},
+  party:{icon:'party',label:'Party',color:'#d500f9'},
+  community:{icon:'community',label:'Community',color:'#00b0ff'},
+  protest:{icon:'protest',label:'Demo',color:'#ff1744'},
+  market:{icon:'market',label:'Markt',color:'#00c853'},
+  sport:{icon:'sport',label:'Sport',color:'#2979ff'},
+  art:{icon:'art',label:'Kunst',color:'#aa00ff'}
+};
 
-// ─── VOTES (localStorage) ─────────────────────────────────
-function getVotes() {
-  try { return JSON.parse(localStorage.getItem('es_votes') || '{}'); } catch { return {}; }
-}
-function saveVote(eventId, vote) {
-  const v = getVotes();
-  v[eventId] = vote;
-  localStorage.setItem('es_votes', JSON.stringify(v));
-}
-function myVote(eventId) {
-  return getVotes()[eventId] || null;
-}
-
-// ─── TOAST ───────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  clearTimeout(toastTimer);
-  const z = document.getElementById('toast-zone');
-  z.innerHTML = `<div class="toast">${msg}</div>`;
-  toastTimer = setTimeout(() => { z.innerHTML = ''; }, 2500);
-}
-
-// ─── MARKER SVG ──────────────────────────────────────────
-function markerSVG(category, isLive) {
-  const cat = CATS[category] || CATS.community;
-  const color = cat.color;
-  const emoji = cat.emoji;
-  const pulse = isLive ? `
-    <circle cx="22" cy="22" r="20" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.7">
-      <animate attributeName="r" values="20;28;20" dur="1.8s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.7;0;0.7" dur="1.8s" repeatCount="indefinite"/>
-    </circle>` : '';
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
-    ${pulse}
-    <circle cx="22" cy="22" r="16" fill="${color}" fill-opacity="0.2"/>
-    <circle cx="22" cy="22" r="13" fill="${color}"/>
-    <text x="22" y="27" text-anchor="middle" font-size="14" font-family="Apple Color Emoji,Segoe UI Emoji,sans-serif">${emoji}</text>
-  </svg>`;
-  return {
-    url: `data:image/svg+xml,${encodeURIComponent(svg)}`,
-    scaledSize: new google.maps.Size(44, 44),
-    anchor: new google.maps.Point(22, 22),
-  };
+/* =====================
+   UTILS
+   ===================== */
+function hav(a,b,c,d){var R=6371e3,rad=function(x){return x*Math.PI/180},dLat=rad(c-a),dLon=rad(d-b),x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ago(ts){if(!ts||!ts.toDate)return'';var s=Math.floor((Date.now()-ts.toDate().getTime())/1e3);if(s<60)return'gerade eben';if(s<3600)return'vor '+Math.floor(s/60)+' Min';if(s<86400)return'vor '+Math.floor(s/3600)+' Std';return'vor '+Math.floor(s/86400)+' Tagen'}
+function mkIcon(col,cnt){
+  var b=cnt>10?'#16a34a':cnt>3?'#eab308':'#64748b';
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="56" viewBox="0 0 48 56"><circle cx="24" cy="22" r="18" fill="'+col+'" stroke="#fff" stroke-width="2.5"/><polygon points="16,36 24,52 32,36" fill="'+col+'"/><circle cx="24" cy="22" r="7" fill="rgba(255,255,255,.25)"/><circle cx="37" cy="8" r="9" fill="'+b+'" stroke="#fff" stroke-width="1.5"/><text x="37" y="12" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="sans-serif">'+cnt+'</text></svg>');
 }
 
-// ─── MAP MARKERS ─────────────────────────────────────────
-function clearMarkers() {
-  Object.values(markers).forEach(m => m.setMap(null));
-  markers = {};
-}
+/* =====================
+   MAP STYLE
+   ===================== */
+var MSTYLE = [
+  {elementType:"geometry",stylers:[{color:"#0a0818"}]},
+  {elementType:"labels.text.fill",stylers:[{color:"#6b6390"}]},
+  {elementType:"labels.text.stroke",stylers:[{color:"#0a0818"},{weight:3}]},
+  {featureType:"road",elementType:"geometry",stylers:[{color:"#181535"}]},
+  {featureType:"road",elementType:"geometry.stroke",stylers:[{color:"#222046"}]},
+  {featureType:"road.highway",elementType:"geometry",stylers:[{color:"#222046"}]},
+  {featureType:"water",elementType:"geometry",stylers:[{color:"#0c1a2c"}]},
+  {featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},
+  {featureType:"poi.park",elementType:"geometry",stylers:[{color:"#0e1322"}]},
+  {featureType:"transit",stylers:[{visibility:"off"}]},
+  {featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#222046"}]},
+  {featureType:"administrative.locality",elementType:"labels.text.fill",stylers:[{color:"#7c6aff"}]}
+];
 
-function renderMarkers() {
-  if (!mapReady) return;
-  clearMarkers();
-  const filtered = filteredEvents();
-  filtered.forEach(ev => {
-    const isLive = ev.type === 'spontaneous';
-    const marker = new google.maps.Marker({
-      position: { lat: ev.lat, lng: ev.lng },
-      map: gmap,
-      icon: markerSVG(ev.category, isLive),
-      title: ev.name,
-      optimized: false,   // needed for SVG animations
-    });
-    marker.addListener('click', () => selectEvent(ev.id));
-    markers[ev.id] = marker;
-  });
-}
+/* =====================
+   GLOBAL STATE
+   ===================== */
+var gmap = null;
+var db = null;
+var auth = null;
+var markers = {};
+var locDot = null;
+var locRing = null;
+var events = [];
+var myPos = null;
+var listening = false;
+var mapOk = false;
 
-function filteredEvents() {
-  if (S.filter === 'all') return events;
-  if (S.filter === 'ai') return events.filter(e => e.type === 'ai' || e.category === 'ai');
-  return events.filter(e => e.type === S.filter);
-}
+var user = null;
+var selEv = null;
+var curFilter = 'all';
+var filOpen = false;
+var showMod = false;
+var vState = 'idle';
+var toastMsg = null;
+var toastTmr = null;
+var fName = '';
+var fCat = 'music';
+var fDesc = '';
+var fDur = '1-2 Stunden';
+var authShown = true;
 
-// ─── EVENT SELECTION ─────────────────────────────────────
-function selectEvent(id) {
-  S.selectedId = id;
-  renderCard();
-  const ev = events.find(e => e.id === id);
-  if (ev && gmap) gmap.panTo({ lat: ev.lat, lng: ev.lng });
-}
+/* =====================
+   FIREBASE INIT
+   ===================== */
+firebase.initializeApp(FB);
+db = firebase.firestore();
+auth = firebase.auth();
 
-function closeCard() {
-  S.selectedId = null;
-  renderCard();
-}
-
-// ─── RENDER: HEADER ──────────────────────────────────────
-function renderHeader() {
-  const z = document.getElementById('header-zone');
-  const avatar = user
-    ? `<div class="user-avatar">${(user.displayName||user.email||'U')[0].toUpperCase()}</div>`
-    : `<button class="btn-icon" onclick="showAuth()" title="Anmelden">👤</button>`;
-
-  const tabs = FILTERS.map(f => {
-    const cls = ['tab', f.cls || '', f.id === S.filter ? 'active' : ''].filter(Boolean).join(' ');
-    return `<button class="${cls}" onclick="setFilter('${f.id}')">${f.icon} ${f.label}</button>`;
-  }).join('');
-
-  z.innerHTML = `
-    <div class="header">
-      <div class="header-top">
-        <div class="logo">Event<span>Spot</span> <span style="font-size:14px;font-weight:400;color:var(--muted)">Zürich</span></div>
-        <div class="header-actions">${avatar}</div>
-      </div>
-      <div class="filter-scroll">${tabs}</div>
-    </div>`;
-}
-
-// ─── RENDER: CARD ────────────────────────────────────────
-function renderCard() {
-  const z = document.getElementById('card-zone');
-  if (!S.selectedId) { z.innerHTML = ''; return; }
-  const ev = events.find(e => e.id === S.selectedId);
-  if (!ev) { z.innerHTML = ''; return; }
-
-  const cat = CATS[ev.category] || CATS.community;
-  const isLive = ev.type === 'spontaneous';
-  const voted = myVote(ev.id);
-
-  const liveBadge = isLive
-    ? `<div class="live-badge"><div class="live-dot"></div> LIVE</div>`
-    : '';
-
-  const catPill = `<div class="cat-pill" style="color:${cat.color};border-color:${cat.color}30;background:${cat.color}18">
-    ${cat.emoji} ${cat.label}
-  </div>`;
-
-  let voteHTML;
-  if (voted) {
-    voteHTML = `
-      <div class="vote-section">
-        <div class="vote-btn confirm ${voted === 'confirmed' ? 'selected' : 'disabled'}" style="flex:1">
-          ✓ Real <span class="vote-count">${ev.confirmed || 0}</span>
-        </div>
-        <div class="vote-btn decline ${voted === 'declined' ? 'selected' : 'disabled'}" style="flex:1">
-          ✗ Falsch <span class="vote-count">${ev.declined || 0}</span>
-        </div>
-      </div>
-      <div class="vote-voted-msg">Du hast bereits abgestimmt · Danke!</div>`;
-  } else {
-    const canVote = !!user;
-    voteHTML = `
-      <div class="vote-section">
-        <button class="vote-btn confirm ${canVote ? '' : 'disabled'}"
-          onclick="${canVote ? `castVote('${ev.id}','confirmed')` : "showToast('Bitte erst anmelden')"}">
-          ✓ Real <span class="vote-count">${ev.confirmed || 0}</span>
-        </button>
-        <button class="vote-btn decline ${canVote ? '' : 'disabled'}"
-          onclick="${canVote ? `castVote('${ev.id}','declined')` : "showToast('Bitte erst anmelden')"}">
-          ✗ Falsch <span class="vote-count">${ev.declined || 0}</span>
-        </button>
-      </div>
-      ${!canVote ? '<div class="vote-voted-msg">Anmelden um abzustimmen</div>' : ''}`;
-  }
-
-  z.innerHTML = `
-    <div class="event-card" style="position:relative">
-      <div class="card-handle"></div>
-      <button class="card-close" onclick="closeCard()">✕</button>
-      <div class="card-cat-row">${catPill} ${liveBadge}</div>
-      <div class="card-title">${ev.name}</div>
-      <div class="card-time">🕐 ${ev.time || '–'}</div>
-      <div class="card-desc">${ev.description || ''}</div>
-      <div class="card-poster">👤 ${ev.postedBy || 'Anonym'} · ${ev.postedAgo || ''}</div>
-      ${voteHTML}
-    </div>`;
-}
-
-// ─── VOTE ────────────────────────────────────────────────
-async function castVote(eventId, type) {
-  if (myVote(eventId)) return;
-  saveVote(eventId, type);
-
-  // Update Firestore
-  try {
-    const field = type === 'confirmed' ? 'confirmed' : 'declined';
-    await db.collection('events').doc(eventId).update({
-      [field]: firebase.firestore.FieldValue.increment(1)
-    });
-  } catch (e) {
-    // Update local count if Firestore fails
-  }
-
-  // Update local event data immediately
-  const ev = events.find(e => e.id === eventId);
-  if (ev) ev[type === 'confirmed' ? 'confirmed' : 'declined'] = (ev[type === 'confirmed' ? 'confirmed' : 'declined'] || 0) + 1;
-
-  showToast(type === 'confirmed' ? '✓ Als real markiert!' : '✗ Als inaktiv gemeldet!');
-  renderCard();
-}
-
-// ─── FILTER ──────────────────────────────────────────────
-function setFilter(f) {
-  S.filter = f;
-  S.selectedId = null;
-  renderHeader();
-  renderCard();
-  renderMarkers();
-}
-
-// ─── ADD EVENT MODAL ─────────────────────────────────────
-function openAddEvent() {
-  if (!user) { showAuth(); return; }
-  S.addModal = true;
-  S.addForm = { name: '', description: '', time: '', category: 'music', type: 'spontaneous' };
-  renderModal();
-}
-
-function closeModal() {
-  S.addModal = false;
-  document.getElementById('modal-zone').innerHTML = '';
-}
-
-function renderModal() {
-  if (!S.addModal) return;
-  const f = S.addForm;
-
-  const catButtons = Object.entries(CATS).map(([k, v]) => {
-    const sel = f.category === k ? 'selected' : '';
-    return `<button class="cat-btn ${sel}" onclick="setFormCat('${k}')">
-      <span class="cat-emoji">${v.emoji}</span>
-      <span>${v.label}</span>
-    </button>`;
-  }).join('');
-
-  document.getElementById('modal-zone').innerHTML = `
-    <div class="modal-backdrop" onclick="closeModal()"></div>
-    <div class="modal-sheet">
-      <div class="modal-title">Event melden 📍</div>
-
-      <label class="form-label">Name des Events</label>
-      <input class="form-field" type="text" placeholder="z.B. Live Jazz am Bürkliplatz"
-        value="${escHtml(f.name)}" oninput="S.addForm.name=this.value" maxlength="80"/>
-
-      <label class="form-label">Typ</label>
-      <div class="type-toggle">
-        <button class="type-btn ${f.type==='spontaneous'?'selected':''}" onclick="setFormType('spontaneous')">🔴 Spontan / Live</button>
-        <button class="type-btn ${f.type==='planned'?'selected':''}" onclick="setFormType('planned')">📅 Geplant</button>
-      </div>
-
-      <label class="form-label">Kategorie</label>
-      <div class="cat-grid">${catButtons}</div>
-
-      <label class="form-label">Uhrzeit / Wann</label>
-      <input class="form-field" type="text" placeholder="z.B. Jetzt · 19:00–22:00"
-        value="${escHtml(f.time)}" oninput="S.addForm.time=this.value" maxlength="50"/>
-
-      <label class="form-label">Beschreibung</label>
-      <textarea class="form-field" placeholder="Was passiert dort?" maxlength="300"
-        oninput="S.addForm.description=this.value">${escHtml(f.description)}</textarea>
-
-      <button class="btn-primary" onclick="submitEvent()">Event veröffentlichen 🚀</button>
-    </div>`;
-}
-
-function setFormCat(c) { S.addForm.category = c; renderModal(); }
-function setFormType(t) { S.addForm.type = t; renderModal(); }
-
-async function submitEvent() {
-  const f = S.addForm;
-  if (!f.name.trim()) { showToast('Bitte einen Namen eingeben'); return; }
-
-  const btn = document.querySelector('.btn-primary');
-  if (btn) { btn.disabled = true; btn.textContent = 'Wird gespeichert…'; }
-
-  try {
-    const docRef = await db.collection('events').add({
-      name: f.name.trim(),
-      description: f.description.trim(),
-      time: f.time.trim(),
-      category: f.category,
-      type: f.type,
-      lat: userLat,
-      lng: userLng,
-      confirmed: 0,
-      declined: 0,
-      postedBy: user.displayName || user.email?.split('@')[0] || 'Anonym',
-      postedAgo: 'Gerade eben',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    closeModal();
-    showToast('🎉 Event wurde gemeldet!');
-  } catch (e) {
-    showToast('Fehler: ' + e.message);
-    if (btn) { btn.disabled = false; btn.textContent = 'Event veröffentlichen 🚀'; }
-  }
-}
-
-// ─── AUTH ────────────────────────────────────────────────
-function showAuth() {
-  document.getElementById('auth-zone').innerHTML = `
-    <div class="auth-logo">Event<span>Spot</span></div>
-    <div class="auth-sub">Zürich · Entdecke was jetzt passiert</div>
-    <button class="btn-google" onclick="signInGoogle()">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-      Mit Google anmelden
-    </button>
-    <button class="auth-skip" onclick="skipAuth()">Ohne Anmeldung fortfahren</button>`;
-  document.getElementById('auth-zone').style.display = 'flex';
-}
-
-function skipAuth() {
-  document.getElementById('auth-zone').style.display = 'none';
-}
-
-async function signInGoogle() {
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-  } catch (e) {
-    showToast('Anmeldung fehlgeschlagen');
-  }
-}
-
-auth.onAuthStateChanged(u => {
+auth.onAuthStateChanged(function(u) {
   user = u;
-  document.getElementById('auth-zone').style.display = 'none';
-  renderHeader();
-  renderCard();
+  if (u) {
+    authShown = false;
+    drawAuth();
+    drawHeader();
+    initMap();
+  } else {
+    authShown = true;
+    drawAuth();
+  }
 });
 
-// ─── FIRESTORE LISTENER ───────────────────────────────────
-function startListening() {
-  db.collection('events')
-    .orderBy('createdAt', 'desc')
-    .limit(100)
-    .onSnapshot(snap => {
-      events = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        events.push({
-          id: doc.id,
-          ...d,
-          postedAgo: d.createdAt ? formatAgo(d.createdAt.toDate()) : 'kürzlich',
-        });
-      });
-      // Seed demo data if empty
-      if (events.length === 0) seedDemoEvents();
-      renderMarkers();
-      renderCard();
-    }, err => console.warn('Firestore:', err));
+/* =====================
+   AUTH
+   ===================== */
+function doGoogle() {
+  var p = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(p).catch(function() { auth.signInWithRedirect(p); });
+}
+function doAnon() {
+  auth.signInAnonymously().catch(function(e) { toast('Fehler: ' + e.message); });
+}
+function doLogout() {
+  auth.signOut();
+  authShown = true;
+  drawAuth();
 }
 
-function formatAgo(date) {
-  const mins = Math.floor((Date.now() - date) / 60000);
-  if (mins < 1) return 'Gerade eben';
-  if (mins < 60) return `vor ${mins} Min.`;
-  return `vor ${Math.floor(mins/60)} Std.`;
-}
-
-async function seedDemoEvents() {
-  const demos = [
-    { name:'Live Jazz am Bürkliplatz', category:'music', type:'spontaneous', lat:47.3657, lng:8.5407, time:'Jetzt · 19:30–22:00', description:'Strassenmusiker spielen Jazz am Seeufer. Gratis, einfach vorbeikommen!', confirmed:23, declined:1, postedBy:'Lena M.' },
-    { name:'Wochenmarkt Helvetiaplatz', category:'market', type:'planned', lat:47.3745, lng:8.5295, time:'Sa 07:00–12:00', description:'Frische lokale Produkte, Käse, Brot und Blumen. Jeden Samstag.', confirmed:67, declined:0, postedBy:'EventSpot' },
-    { name:'Lagerfeuer am Mythenquai', category:'bonfire', type:'spontaneous', lat:47.3556, lng:8.5353, time:'Ab 20:00', description:'Feuer am See, Gitarrenmusik. Bring Würstchen mit!', confirmed:41, declined:2, postedBy:'Marco S.' },
-    { name:'Street Food Festival', category:'food', type:'planned', lat:47.3780, lng:8.5490, time:'Fr–So 11:00–22:00', description:'20+ Street-Food-Stände aus aller Welt auf dem Sechseläutenplatz.', confirmed:89, declined:0, postedBy:'Eventfrog (AI)' },
-    { name:'Techno Night im Hive', category:'party', type:'spontaneous', lat:47.3720, lng:8.5320, time:'Ab 22:00', description:'Special guest DJ tonight. Eintritt CHF 20.', confirmed:15, declined:3, postedBy:'Club Hive' },
-    { name:'Open Mic Cabaret', category:'art', type:'planned', lat:47.3810, lng:8.5440, time:'20:00–23:00', description:'Offene Bühne für Comedians und Musiker. Gratis Eintritt.', confirmed:12, declined:0, postedBy:'KulturSpot (AI)', category2:'ai' },
-  ];
-  for (const d of demos) {
-    await db.collection('events').add({
-      ...d,
-      declined: d.declined || 0,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+/* =====================
+   FIRESTORE
+   ===================== */
+function startListen() {
+  if (listening) return;
+  listening = true;
+  db.collection('events').orderBy('createdAt','desc').onSnapshot(function(snap) {
+    events = [];
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      d.id = doc.id;
+      events.push(d);
     });
+    syncMarkers();
+    drawHud();
+    drawHeader();
+    if (selEv) {
+      for (var i = 0; i < events.length; i++) {
+        if (events[i].id === selEv.id) { selEv = events[i]; break; }
+      }
+      drawCard();
+    }
+  });
+}
+
+/* =====================
+   FILTER
+   ===================== */
+function getVis() {
+  if (curFilter === 'all') return events;
+  if (curFilter === 'spontaneous') return events.filter(function(e){return e.type==='spontaneous'});
+  if (curFilter === 'planned') return events.filter(function(e){return e.type==='planned'});
+  return events.filter(function(e){return e.category===curFilter});
+}
+function setFil(f) {
+  curFilter = f;
+  syncMarkers();
+  drawHeader();
+  drawHud();
+}
+
+/* =====================
+   MAP MARKERS
+   ===================== */
+function syncMarkers() {
+  if (!gmap) return;
+  var vis = getVis();
+  var keep = {};
+  var i, ev, cat, sp, col, cnt, ico, m;
+
+  for (i = 0; i < vis.length; i++) { keep[vis[i].id] = true; }
+
+  // Remove old
+  var keys = Object.keys(markers);
+  for (i = 0; i < keys.length; i++) {
+    if (!keep[keys[i]]) {
+      markers[keys[i]].setMap(null);
+      delete markers[keys[i]];
+    }
+  }
+
+  // Add or update
+  for (i = 0; i < vis.length; i++) {
+    ev = vis[i];
+    cat = CATS[ev.category] || CATS.community;
+    sp = ev.type === 'spontaneous';
+    col = sp ? cat.color : '#34d399';
+    cnt = ev.confirmed || 0;
+    ico = {
+      url: mkIcon(col, cnt),
+      scaledSize: new google.maps.Size(38, 45),
+      anchor: new google.maps.Point(19, 45)
+    };
+
+    if (markers[ev.id]) {
+      markers[ev.id].setIcon(ico);
+      markers[ev.id].setPosition({lat: ev.lat, lng: ev.lng});
+    } else {
+      m = new google.maps.Marker({
+        map: gmap,
+        position: {lat: ev.lat, lng: ev.lng},
+        icon: ico,
+        title: ev.name,
+        optimized: false,
+        animation: google.maps.Animation.DROP
+      });
+      (function(eid) {
+        m.addListener('click', function() { pickEvent(eid); });
+      })(ev.id);
+      markers[ev.id] = m;
+    }
   }
 }
 
-// ─── MAP INIT ────────────────────────────────────────────
-window.initMapCallback = function() {
-  if (mapReady) return;
-  mapReady = true;
-  gmap = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: 47.3769, lng: 8.5417 },
-    zoom: 14,
-    styles: MAP_STYLE,
-    disableDefaultUI: true,
-    gestureHandling: 'greedy',
-    clickableIcons: false,
-  });
-  // Close card when map background tapped
-  gmap.addListener('click', () => { S.selectedId = null; renderCard(); });
-  startListening();
-  locateUser();
-};
-
-// ─── LOCATE USER ─────────────────────────────────────────
-function locateUser() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(pos => {
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-    if (gmap) {
-      gmap.panTo({ lat: userLat, lng: userLng });
-      if (userMarker) userMarker.setMap(null);
-      userMarker = new google.maps.Marker({
-        position: { lat: userLat, lng: userLng },
-        map: gmap,
-        icon: {
-          url: `data:image/svg+xml,${encodeURIComponent(
-            `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-              <circle cx="11" cy="11" r="10" fill="rgba(124,92,252,0.15)" stroke="#7c5cfc" stroke-width="1.5"/>
-              <circle cx="11" cy="11" r="5" fill="#7c5cfc"/>
-            </svg>`
-          )}`,
-          scaledSize: new google.maps.Size(22, 22),
-          anchor: new google.maps.Point(11, 11),
-        },
-        title: 'Mein Standort',
-        zIndex: 1000,
+/* =====================
+   USER LOCATION
+   ===================== */
+function trackLoc() {
+  if (!navigator.geolocation || !gmap) return;
+  navigator.geolocation.watchPosition(function(p) {
+    myPos = {lat: p.coords.latitude, lng: p.coords.longitude};
+    if (!locDot) {
+      locDot = new google.maps.Marker({
+        map: gmap, position: myPos,
+        icon: {path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#4285F4', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2.5},
+        title: 'Dein Standort', zIndex: 999
       });
+      locRing = new google.maps.Circle({
+        map: gmap, center: myPos, radius: p.coords.accuracy,
+        fillColor: '#4285F4', fillOpacity: 0.08, strokeColor: '#4285F4', strokeOpacity: 0.25, strokeWeight: 1
+      });
+    } else {
+      locDot.setPosition(myPos);
+      locRing.setCenter(myPos);
+      locRing.setRadius(p.coords.accuracy);
     }
-  }, null, { enableHighAccuracy: true, timeout: 8000 });
+  }, function(){}, {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000});
+}
+function goToMe() {
+  if (myPos && gmap) { gmap.panTo(myPos); gmap.setZoom(15); }
+  else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(p) {
+      gmap.panTo({lat: p.coords.latitude, lng: p.coords.longitude});
+      gmap.setZoom(15);
+    }, function(){}, {enableHighAccuracy: true, timeout: 8000});
+  }
 }
 
-// ─── UTILS ───────────────────────────────────────────────
-function escHtml(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+/* =====================
+   EVENT ACTIONS
+   ===================== */
+function pickEvent(id) {
+  selEv = null;
+  for (var i = 0; i < events.length; i++) { if (events[i].id === id) { selEv = events[i]; break; } }
+  vState = 'idle';
+  drawCard();
+  drawHud();
+  if (selEv && gmap) gmap.panTo({lat: selEv.lat, lng: selEv.lng});
+}
+function closeCard() {
+  selEv = null;
+  vState = 'idle';
+  drawCard();
+  drawHud();
+}
+function doVerify() {
+  if (!navigator.geolocation) { vState = 'unavailable'; drawCard(); return; }
+  vState = 'checking'; drawCard();
+  navigator.geolocation.getCurrentPosition(function(p) {
+    var d = hav(p.coords.latitude, p.coords.longitude, selEv.lat, selEv.lng);
+    vState = d <= 300 ? 'nearby' : 'too_far';
+    drawCard();
+  }, function(e) {
+    vState = e.code === 1 ? 'denied' : 'unavailable';
+    drawCard();
+  }, {enableHighAccuracy: true, timeout: 10000, maximumAge: 30000});
+}
+function doConfirm() {
+  if (!selEv || vState !== 'nearby') return;
+  db.collection('events').doc(selEv.id).update({confirmed: firebase.firestore.FieldValue.increment(1)});
+  toast('✅ Bestätigt! Danke.');
+}
+function doDecline() {
+  if (!selEv || vState !== 'nearby') return;
+  db.collection('events').doc(selEv.id).update({declined: firebase.firestore.FieldValue.increment(1)});
+  toast('❌ Abgelehnt. Danke.');
 }
 
-// ─── BOOT ────────────────────────────────────────────────
-renderHeader();
+/* =====================
+   MODAL (add event)
+   ===================== */
+function openMod() { showMod = true; drawModal(); }
+function closeMod() { showMod = false; fName = ''; fCat = 'music'; fDesc = ''; fDur = '1-2 Stunden'; drawModal(); }
+function setCat(c) { fCat = c; drawModal(); }
+function setDur(d) { fDur = d; drawModal(); }
 
-// Show auth on first visit
-if (!localStorage.getItem('es_visited')) {
-  localStorage.setItem('es_visited', '1');
-  setTimeout(() => {
-    if (!auth.currentUser) showAuth();
-  }, 1400);
+function submitEv() {
+  if (!fName.trim()) return;
+  var n = fName.trim(), c = fCat, de = fDesc, du = fDur;
+  var poster = (user && user.displayName) || 'Anonym';
+  var uid = (user && user.uid) || null;
+
+  var save = function(lat, lng) {
+    db.collection('events').add({
+      name: n, type: 'spontaneous', category: c, lat: lat, lng: lng,
+      time: 'Jetzt · ' + du, description: de || 'Neues Event in der Nähe!',
+      confirmed: 1, declined: 0, postedBy: poster, postedByUid: uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeMod();
+    toast('🎉 Event gemeldet!');
+  };
+
+  if (myPos) save(myPos.lat, myPos.lng);
+  else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(p) { save(p.coords.latitude, p.coords.longitude); },
+      function() { save(47.3769 + (Math.random()-.5)*.01, 8.5417 + (Math.random()-.5)*.01); },
+      {enableHighAccuracy: true, timeout: 8000}
+    );
+  } else save(47.3769, 8.5417);
 }
 
-// Load Google Maps
-(function() {
-  const s = document.createElement('script');
-  s.src = `https://maps.googleapis.com/maps/api/js?key=${window.MAPS_KEY}&callback=initMapCallback&v=weekly`;
-  s.async = true; s.defer = true;
-  document.head.appendChild(s);
-})();
-
-// Hide splash
-setTimeout(() => {
-  document.getElementById('splash').classList.add('out');
-}, 1200);
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+/* =====================
+   TOAST
+   ===================== */
+function toast(m) {
+  clearTimeout(toastTmr);
+  toastMsg = m;
+  drawToast();
+  toastTmr = setTimeout(function() { toastMsg = null; drawToast(); }, 2500);
 }
+
+/* =====================
+   DRAW FUNCTIONS
+   Each one ONLY modifies its zone
+   #map is NEVER touched
+   ===================== */
+
+function drawAuth() {
+  var el = document.getElementById('zA');
+  if (!authShown) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = '<div class="auth-bg"><h1>Event<span>Spot</span></h1><p>Entdecke spontane Events in deiner Nähe. Melde dich an, um Events zu bestätigen und eigene zu erstellen.</p><button class="gbtn" onclick="doGoogle()"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">Mit Google anmelden</button><button class="skipbtn" onclick="doAnon()">Ohne Konto fortfahren</button></div>';
+}
+
+function drawHeader() {
+  var vis = getVis();
+  var h = '<div class="hdr"><div class="hdr-row"><div><div class="hdr-logo">Event<span>Spot</span></div><div class="hdr-sub">' + IC.nav(9) + ' Zürich · ' + vis.length + ' Events</div></div><div class="hdr-r"><button class="hbtn ' + (filOpen ? 'on' : '') + '" onclick="filOpen=!filOpen;drawHeader()">' + IC.filter(12) + ' Filter</button>';
+  if (user && !user.isAnonymous) {
+    h += '<div class="hav" onclick="if(confirm(\'Abmelden?\'))doLogout()"><img src="' + (user.photoURL || '') + '" alt=""></div>';
+  } else {
+    h += '<button class="hbtn" onclick="doGoogle()">Anmelden</button>';
+  }
+  h += '</div></div></div>';
+
+  if (filOpen) {
+    var ch = [{k:'all',l:'Alle'},{k:'spontaneous',l:'🟣 Spontan'},{k:'planned',l:'🟢 Geplant'}];
+    var ks = Object.keys(CATS);
+    for (var i = 0; i < ks.length; i++) ch.push({k: ks[i], l: CATS[ks[i]].label});
+    h += '<div class="chips">';
+    for (var j = 0; j < ch.length; j++) {
+      h += '<button class="chip ' + (curFilter === ch[j].k ? 'on' : '') + '" onclick="setFil(\'' + ch[j].k + '\')">' + ch[j].l + '</button>';
+    }
+    h += '</div>';
+  }
+  document.getElementById('zH').innerHTML = h;
+}
+
+function drawHud() {
+  var live = 0, plan = 0;
+  for (var i = 0; i < events.length; i++) {
+    if (events[i].type === 'spontaneous') live++; else plan++;
+  }
+  var h = '<div class="legend"><span style="display:flex;align-items:center;gap:4px"><span class="dot" style="background:var(--accent);box-shadow:0 0 4px var(--accent)"></span>Spontan</span><span style="display:flex;align-items:center;gap:4px"><span class="dot" style="background:var(--green);box-shadow:0 0 4px var(--green)"></span>Geplant</span></div>';
+  h += '<button class="locbtn" onclick="goToMe()">' + IC.cross(18) + '</button>';
+
+  if (!selEv) {
+    h += '<div class="stats"><div class="stat" style="color:var(--accent2)"><span class="dot" style="background:var(--accent)"></span>' + live + ' Live</div><div class="stat" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span>' + plan + ' Geplant</div></div>';
+    h += '<button class="fab" onclick="openMod()">' + IC.plus(22) + '</button>';
+  }
+  if (events.length === 0 && !selEv) {
+    h += '<div class="empty"><div style="font-size:28px;margin-bottom:6px">📍</div>Noch keine Events.<br>Tippe <b>+</b> um das erste zu melden!</div>';
+  }
+  document.getElementById('zO').innerHTML = h;
+}
+
+function drawCard() {
+  var el = document.getElementById('zC');
+  if (!selEv) { el.innerHTML = ''; return; }
+  var s = selEv, v = vState, ok = v === 'nearby';
+  var cat = CATS[s.category] || CATS.community;
+  var sp = s.type === 'spontaneous';
+  var tot = (s.confirmed||0) + (s.declined||0);
+  var ratio = tot > 0 ? ((s.confirmed||0) / tot) * 100 : 100;
+  var bc = ratio > 80 ? 'linear-gradient(90deg,#34d399,#0d9f6e)' : ratio > 50 ? 'linear-gradient(90deg,#fbbf24,#d97706)' : 'linear-gradient(90deg,#f87171,#dc2626)';
+  var tc = sp ? cat.color : '#34d399';
+  var posted = ago(s.createdAt) || '';
+  var dist = '';
+  if (myPos) {
+    var dm = Math.round(hav(myPos.lat, myPos.lng, s.lat, s.lng));
+    dist = dm < 1000 ? dm + 'm' : (Math.round(dm/100)/10) + 'km';
+  }
+
+  var vbg = ok ? 'rgba(52,211,153,.08)' : v==='too_far' ? 'rgba(248,113,113,.08)' : 'var(--surface)';
+  var vbd = ok ? '#34d39940' : v==='too_far' ? '#f8717140' : 'var(--raised)';
+  var vibg = ok ? 'rgba(52,211,153,.15)' : v==='too_far' ? 'rgba(248,113,113,.15)' : 'var(--raised)';
+  var vic = ok ? 'var(--green)' : v==='too_far' ? 'var(--red)' : 'var(--t1)';
+  var vih = v==='checking' ? '<div style="width:14px;height:14px;border-radius:50%;border:2px solid var(--raised);border-top-color:var(--accent);animation:spin .6s linear infinite"></div>' : ok ? IC.check(14) : IC.pin(14);
+  var vtxt = v==='checking' ? 'Standort wird geprüft…' : ok ? 'Du bist in der Nähe ✓' : v==='too_far' ? 'Zu weit weg' : v==='denied' ? 'Standort verweigert' : v==='unavailable' ? 'Nicht verfügbar' : 'Standort verifizieren';
+  var vsub = v==='checking' ? 'Einen Moment…' : ok ? 'Du kannst jetzt abstimmen.' : v==='too_far' ? 'Innerhalb 300m zum Abstimmen.' : v==='denied' ? 'Erlaube Standortzugriff.' : v==='unavailable' ? 'GPS nicht verfügbar.' : 'Du musst vor Ort sein.';
+  var svb = v==='idle' || v==='too_far' || v==='denied';
+  var dis = ok ? '' : ' off';
+
+  el.innerHTML = '<div class="cbg" onclick="closeCard()"></div><div class="csheet" onclick="event.stopPropagation()"><div class="cin">'
+    + '<div class="grab"></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap"><span class="badge" style="background:'+tc+'22;color:'+tc+'">'+IC[cat.icon](9)+' '+(sp?'Spontan':'Geplant')+'</span><span class="badge" style="background:var(--raised);color:var(--t2)">'+cat.label+'</span>'+(dist?'<span class="badge" style="background:var(--raised);color:var(--accent2)">'+IC.pin(8)+' '+dist+'</span>':'')+'</div><h2 class="ctitle">'+esc(s.name)+'</h2></div><button class="closex" onclick="closeCard()">'+IC.x(12)+'</button></div>'
+    + '<div class="cmeta" style="margin-bottom:7px"><span style="display:flex;align-items:center;gap:3px;font-weight:500">'+IC.clock(10)+' '+esc(s.time||'')+'</span><span style="color:var(--t3);font-size:10px">'+IC.eye(9)+' '+esc(s.postedBy||'Anonym')+' · '+posted+'</span></div>'
+    + '<p class="cdesc" style="border-color:'+tc+';margin-bottom:10px">'+esc(s.description||'')+'</p>'
+    + '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em">Glaubwürdigkeit</span><span style="font-size:9px;color:var(--t3)">'+(s.confirmed||0)+' ✓ · '+(s.declined||0)+' ✗</span></div><div class="ctrack"><div class="cfill" style="background:'+bc+';width:'+ratio+'%"></div></div></div>'
+    + '<div class="vbox" style="background:'+vbg+';border-color:'+vbd+'"><div class="vico" style="background:'+vibg+';color:'+vic+'">'+vih+'</div><div style="flex:1"><div class="vt" style="color:'+vic+'">'+vtxt+'</div><div class="vsub">'+vsub+'</div></div>'+(svb?'<button class="vbtn" onclick="doVerify()">📍 Prüfen</button>':'')+'</div>'
+    + '<div class="acts"><button class="abtn ayes'+dis+'" onclick="doConfirm()">'+IC.check(14)+' Bestätigen</button><button class="abtn ano'+dis+'" onclick="doDecline()">'+IC.xc(14)+' Ablehnen</button></div>'
+    + (!ok && v!=='checking' ? '<p style="text-align:center;font-size:9px;color:var(--t3);margin-top:5px">📍 Standort verifizieren zum Abstimmen</p>' : '')
+    + '</div></div>';
+}
+
+function drawModal() {
+  var el = document.getElementById('zMo');
+  if (!showMod) { el.innerHTML = ''; el.style.pointerEvents = 'none'; return; }
+  el.style.pointerEvents = 'auto';
+  var cats = '', ks = Object.keys(CATS);
+  for (var i = 0; i < ks.length; i++) {
+    var k = ks[i], c = CATS[k];
+    cats += '<button class="copt '+(fCat===k?'on':'')+'" style="--cc:'+c.color+'" onclick="setCat(\''+k+'\')">'+IC[c.icon](10)+' '+c.label+'</button>';
+  }
+  var durs = '', da = ['< 1 Stunde','1-2 Stunden','3-5 Stunden','Ganzer Tag'];
+  for (var j = 0; j < da.length; j++) {
+    durs += '<button class="dopt '+(fDur===da[j]?'on':'')+'" onclick="setDur(\''+da[j].replace(/'/g,"\\'")+'\')">' + da[j] + '</button>';
+  }
+  var can = fName.trim().length > 0;
+  el.innerHTML = '<div class="mbg" onclick="closeMod()"><div class="msheet" onclick="event.stopPropagation()"><div class="min"><div class="grab"></div><h2>Neues Event melden 📍</h2>'
+    + '<label class="lbl">Event Name *</label><input class="inp" placeholder="z.B. Live Musik am See" value="'+esc(fName)+'" oninput="fName=this.value" style="margin-bottom:10px">'
+    + '<label class="lbl">Kategorie</label><div class="cgrid" style="margin-bottom:10px">'+cats+'</div>'
+    + '<label class="lbl">Beschreibung</label><textarea class="inp" placeholder="Was passiert dort?" rows="3" oninput="fDesc=this.value" style="margin-bottom:10px;resize:vertical">'+esc(fDesc)+'</textarea>'
+    + '<label class="lbl">Geschätzte Dauer</label><div class="dgrid" style="margin-bottom:16px">'+durs+'</div>'
+    + '<button class="sendbtn" style="background:'+(can?'linear-gradient(135deg,#7c6aff,#5b47e0)':'var(--raised)')+';color:'+(can?'#fff':'var(--t3)')+'" '+(can?'onclick="submitEv()"':'')+'>Event melden 🚀</button>'
+    + '</div></div></div>';
+}
+
+function drawToast() {
+  document.getElementById('zT').innerHTML = toastMsg ? '<div class="toast">' + toastMsg + '</div>' : '';
+}
+
+/* =====================
+   MAP INIT (once)
+   ===================== */
+function initMap() {
+  if (mapOk || authShown || !window.google) return;
+  var el = document.getElementById('map');
+  if (!el) return;
+  mapOk = true;
+  gmap = new google.maps.Map(el, {
+    center: {lat: 47.3769, lng: 8.5417}, zoom: 14,
+    styles: MSTYLE, disableDefaultUI: true,
+    zoomControl: false, mapTypeControl: false,
+    streetViewControl: false, fullscreenControl: false,
+    gestureHandling: 'greedy', clickableIcons: false
+  });
+  startListen();
+  drawHud();
+  trackLoc();
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(p) {
+      gmap.panTo({lat: p.coords.latitude, lng: p.coords.longitude});
+    }, function(){}, {timeout: 5000});
+  }
+}
+
+/* Google Maps callback */
+function mapReady() { initMap(); }
+
+/* Load Google Maps */
+var sc = document.createElement('script');
+sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + MAPS_KEY + '&callback=mapReady&v=weekly';
+sc.async = true;
+sc.defer = true;
+document.head.appendChild(sc);
+
+/* =====================
+   BOOT
+   ===================== */
+drawAuth();
+setTimeout(function() { document.getElementById('splash').classList.add('gone'); }, 900);
 </script>
 </body>
 </html>
