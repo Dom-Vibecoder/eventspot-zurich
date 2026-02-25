@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EventSpot – Seed Events</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0c0a1d; color: #eee; padding: 40px; max-width: 600px; margin: 0 auto; }
+    h1 { color: #7c6aff; }
+    button { padding: 16px 32px; font-size: 16px; border: none; border-radius: 12px; background: #7c6aff; color: #fff; cursor: pointer; font-weight: 700; margin: 20px 0; }
+    button:disabled { opacity: 0.5; }
+    .log { background: #1e1a3a; border-radius: 12px; padding: 16px; font-size: 13px; line-height: 1.8; max-height: 400px; overflow-y: auto; }
+    .ok { color: #34d399; }
+    .err { color: #f87171; }
+  </style>
+
+  <!-- ⬇️ PASTE THE SAME FIREBASE CONFIG HERE ⬇️ -->
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAg6oTGoJa_Yp7flssU5OpyXvJ2KxoA0yA",
+      authDomain: "eventspot-zurich.firebaseapp.com",
+      projectId: "eventspot-zurich",
+      storageBucket: "eventspot-zurich.firebasestorage.app",
+      messagingSenderId: "210810461333",
+      appId: "1:210810461333:web:1c8283baba7e0fef364f9c"
+    };
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h1>🌱 EventSpot Seed Tool</h1>
+  <p>This adds 12 sample Zürich events to your Firestore database so the app isn't empty when you first open it.</p>
+  <p><strong>Run this only once.</strong></p>
+  <button id="btn" onclick="seed()">Seed Events into Firestore</button>
+  <div class="log" id="log">Ready…</div>
+
+  <script>
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    const db = firebase.firestore();
+
+    const EVENTS = [
+      {name:"Live Jazz am Bürkliplatz",type:"spontaneous",category:"music",lat:47.3657,lng:8.5407,time:"Jetzt · 19:30–22:00",description:"Strassenmusiker spielen Jazz am Seeufer. Gratis, komm vorbei!",confirmed:23,declined:1,postedBy:"Lena M."},
+      {name:"Wochenmarkt Helvetiaplatz",type:"planned",category:"market",lat:47.3745,lng:8.5295,time:"Sa 07:00–12:00",description:"Wöchentlicher Markt mit lokalen Produkten, Käse, Brot und Blumen. Via Ron Orp.",confirmed:67,declined:0,postedBy:"EventSpot"},
+      {name:"Lagerfeuer am Mythenquai",type:"spontaneous",category:"bonfire",lat:47.3556,lng:8.5353,time:"Jetzt · ab 20:00",description:"Feuer am See, Gitarrenmusik. Bring Würstchen mit! 🔥",confirmed:15,declined:2,postedBy:"Marco T."},
+      {name:"Techno im Hive Club",type:"planned",category:"party",lat:47.3870,lng:8.5190,time:"Fr 23:00–05:00",description:"Resident DJ Night mit lokalen DJs. Eintritt 15 CHF. Via Eventfrog.",confirmed:89,declined:5,postedBy:"EventSpot"},
+      {name:"Yoga im Rieterpark",type:"spontaneous",category:"sport",lat:47.3610,lng:8.5280,time:"Jetzt · 10:00–11:00",description:"Open-Air Yoga Session, alle Levels willkommen. Bring deine Matte!",confirmed:11,declined:0,postedBy:"Sarah K."},
+      {name:"Strassenkunst Langstrasse",type:"spontaneous",category:"art",lat:47.3785,lng:8.5275,time:"Jetzt · ganzer Tag",description:"Graffiti-Künstler gestalten neue Wandbilder an der Langstrasse.",confirmed:19,declined:0,postedBy:"Alex R."},
+      {name:"Foodtruck Festival Kasernenareal",type:"planned",category:"food",lat:47.3760,lng:8.5315,time:"Sa–So 11:00–21:00",description:"15+ Foodtrucks aus der ganzen Schweiz. Street Food vom Feinsten!",confirmed:142,declined:3,postedBy:"EventSpot"},
+      {name:"Klima-Demo Bellevue",type:"spontaneous",category:"protest",lat:47.3667,lng:8.5450,time:"Heute · 14:00–17:00",description:"Friedliche Klimademo, Treffpunkt Bellevue um 14:00.",confirmed:34,declined:8,postedBy:"Fridays ZH"},
+      {name:"Pub Quiz @ Café Rosengarten",type:"planned",category:"community",lat:47.3830,lng:8.5490,time:"Do 20:00–22:30",description:"Wöchentliches Pub Quiz auf Englisch. Teams von 2–6 Personen. Gratis!",confirmed:28,declined:1,postedBy:"EventSpot"},
+      {name:"Salsa Tanzen am See",type:"spontaneous",category:"music",lat:47.3540,lng:8.5420,time:"Jetzt · ab 18:00",description:"Open-Air Salsa am Zürichhorn. Anfänger willkommen!",confirmed:31,declined:0,postedBy:"Rosa D."},
+      {name:"Flohmarkt Bürkliplatz",type:"planned",category:"market",lat:47.3650,lng:8.5395,time:"Sa 06:00–16:00",description:"Zürichs grösster Flohmarkt. Antiquitäten, Kleidung, Vinyl.",confirmed:95,declined:2,postedBy:"EventSpot"},
+      {name:"Pickup Basketball Irchelpark",type:"spontaneous",category:"sport",lat:47.3960,lng:8.5480,time:"Jetzt · ab 16:00",description:"Offenes Basketballspiel, wir brauchen noch Leute!",confirmed:8,declined:0,postedBy:"Dani P."},
+    ];
+
+    async function seed(){
+      const btn = document.getElementById('btn');
+      const log = document.getElementById('log');
+      btn.disabled = true;
+      log.innerHTML = '';
+
+      for(const ev of EVENTS){
+        try {
+          const ref = await db.collection('events').add({
+            ...ev,
+            postedByUid: null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+          log.innerHTML += `<div class="ok">✅ ${ev.name} → ${ref.id}</div>`;
+        } catch(e) {
+          log.innerHTML += `<div class="err">❌ ${ev.name}: ${e.message}</div>`;
+        }
+      }
+      log.innerHTML += `<br><strong class="ok">Done! ${EVENTS.length} events seeded. You can close this page.</strong>`;
+    }
+  </script>
+</body>
+</html>
