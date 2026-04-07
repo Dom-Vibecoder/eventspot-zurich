@@ -19,13 +19,13 @@
   --bg:#0a0818; --card:#14112e; --surface:#1c1838; --raised:#28234a;
   --accent:#7c6aff; --accent2:#a99cff; --glow:rgba(124,106,255,.2);
   --green:#34d399; --greend:#0d9f6e; --red:#f87171;
-  --t1:#ede8ff; --t2:#8a82a6; --t3:#5a5374;
+  --t1:#ede8ff; --t2:#a49bbe; --t3:#7a7394;
   --border:rgba(255,255,255,.07);
   --top:env(safe-area-inset-top,0px); --bot:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--t1);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--t1);-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;touch-action:manipulation}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea{font-family:inherit}
 
@@ -46,9 +46,9 @@ input,textarea{font-family:inherit}
 .sheet-bar{width:36px;height:4px;border-radius:2px;background:var(--raised);margin:0 auto 10px}
 .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .sheet-title{font-size:14px;font-weight:700;color:var(--t1)}
-.fab-sm{padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700;
+.fab-sm{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;
   background:linear-gradient(135deg,#7c6aff,#5b47e0);color:#fff;
-  box-shadow:0 2px 10px rgba(91,71,224,.3)}
+  box-shadow:0 2px 10px rgba(91,71,224,.3);cursor:pointer}
 .fab-sm:active{transform:scale(.93)}
 .sheet-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;padding:0 12px calc(20px + var(--bot));
@@ -76,27 +76,27 @@ input,textarea{font-family:inherit}
 .auth-bg h1{font-size:38px;font-weight:900;letter-spacing:-.04em;margin-bottom:4px}
 .auth-bg h1 span{color:var(--accent)}
 .auth-bg p{color:var(--t2);font-size:14px;margin-bottom:28px;max-width:260px;line-height:1.5}
-.gbtn{display:flex;align-items:center;gap:10px;padding:13px 26px;border-radius:14px;border:2px solid var(--border);background:var(--surface);font-size:15px;font-weight:600}
+.gbtn{display:flex;align-items:center;gap:10px;padding:13px 26px;border-radius:14px;border:2px solid var(--border);background:var(--surface);font-size:15px;font-weight:600;cursor:pointer}
 .gbtn img{width:20px;height:20px}
 .skipbtn{margin-top:14px;color:var(--t3);font-size:13px;text-decoration:underline}
 
 /* SEARCH BAR */
-.search-pill{pointer-events:auto;display:flex;align-items:center;gap:8px;background:rgba(20,17,46,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:10px 14px;margin-top:10px;box-shadow:0 4px 28px rgba(0,0,0,.3)}
+.search-pill{pointer-events:auto;display:flex;align-items:center;gap:8px;background:rgba(20,17,46,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:10px 14px;margin-top:10px;box-shadow:0 4px 28px rgba(0,0,0,.3);text-shadow:0 1px 3px rgba(0,0,0,.3)}
 .sp-icon{font-size:15px;color:var(--t2);flex-shrink:0}
 .sp-input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;min-width:0}
 .sp-input::placeholder{color:var(--t2);font-weight:500}
-.sp-clear{background:none;border:none;color:var(--t2);font-size:14px;cursor:pointer;padding:0 2px;flex-shrink:0;display:none}
-.sp-avatar{width:32px;height:32px;border-radius:50%;background:var(--raised);border:1px solid var(--border);overflow:hidden;cursor:pointer;pointer-events:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:15px}
+.sp-clear{background:none;border:none;color:var(--t2);font-size:14px;cursor:pointer;padding:4px 6px;min-width:32px;min-height:32px;flex-shrink:0;display:none;align-items:center;justify-content:center}
+.sp-avatar{width:36px;height:36px;border-radius:50%;background:var(--raised);border:1px solid var(--border);overflow:hidden;cursor:pointer;pointer-events:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:15px}
 .sp-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 
 /* FILTER PILLS */
-.filter-pills{pointer-events:auto;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:8px 0 6px;scrollbar-width:none}
+.filter-pills{pointer-events:auto;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:8px 0 6px;scrollbar-width:none}
 .filter-pills::-webkit-scrollbar{display:none}
-.fp{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.1);background:rgba(20,17,46,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--t2);cursor:pointer;white-space:nowrap}
-.fp.on{background:var(--glow);border-color:var(--accent);color:var(--accent2)}
+.fp{flex-shrink:0;padding:7px 15px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,.12);background:rgba(20,17,46,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--t1);cursor:pointer;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.fp.on{background:rgba(124,106,255,.35);border-color:var(--accent);color:#1a1730;text-shadow:none}
 
 /* HUD */
-.locbtn{position:absolute;left:16px;width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(10,8,24,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--accent2);display:flex;align-items:center;justify-content:center}
+.locbtn{position:absolute;left:16px;width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(10,8,24,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--accent2);display:flex;align-items:center;justify-content:center;cursor:pointer}
 
 /* PEEK CARD */
 .peek-card{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:18px 18px 0 0;border-top:1px solid var(--border);padding:10px 16px calc(20px + var(--bot));animation:slideUp .2s cubic-bezier(.34,1.4,.64,1);z-index:201;cursor:pointer}
@@ -111,7 +111,7 @@ input,textarea{font-family:inherit}
 .csheet{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -6px 36px rgba(0,0,0,.4);max-height:62vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;animation:slideUp .25s cubic-bezier(.34,1.4,.64,1)}
 .cin{padding:14px 16px calc(16px + var(--bot))}
 .grab{width:32px;height:3px;border-radius:2px;background:var(--raised);margin:0 auto 10px}
-.closex{width:26px;height:26px;border-radius:50%;background:var(--raised);color:var(--t2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.closex{width:36px;height:36px;border-radius:50%;background:var(--raised);color:var(--t2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:14px;font-size:9px;font-weight:600}
 .ctitle{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .cmeta{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--t2)}
@@ -124,7 +124,7 @@ input,textarea{font-family:inherit}
 .vsub{font-size:10px;color:var(--t3);line-height:1.3}
 .vbtn{padding:5px 10px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b47e0);color:#fff;font-size:10px;font-weight:700;white-space:nowrap}
 .acts{display:flex;gap:6px}
-.abtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:11px;border-radius:11px;font-size:13px;font-weight:700}
+.abtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:11px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer}
 .ayes{background:linear-gradient(135deg,var(--green),var(--greend));color:#fff;box-shadow:0 3px 12px rgba(52,211,153,.2)}
 .ano{background:var(--raised);color:var(--t2);border:1.5px solid var(--border)}
 .abtn.off{opacity:.35;pointer-events:none;filter:grayscale(.3)}
@@ -150,7 +150,7 @@ input,textarea{font-family:inherit}
 /* INFO LINK */
 .info-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
   border-radius:9px;background:var(--surface);border:1px solid var(--border);
-  color:var(--accent2);font-size:12px;font-weight:600;text-decoration:none;margin-bottom:10px}
+  color:var(--accent2);font-size:12px;font-weight:600;text-decoration:none;margin-bottom:10px;cursor:pointer}
 .info-link:active{background:var(--raised)}
 
 /* EMPTY FEED */
@@ -196,7 +196,7 @@ input,textarea{font-family:inherit}
 
 /* DATE ROW */
 #dateRow{pointer-events:auto;padding:0 0 6px}
-#dateRow .dr{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding:0 0 2px;scrollbar-width:none}
+#dateRow .dr{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:0 0 2px;scrollbar-width:none}
 #dateRow .dr::-webkit-scrollbar{display:none}
 
 /* TYPE TOGGLE (modal) */
@@ -208,8 +208,17 @@ input,textarea{font-family:inherit}
 /* DELETE / END EVENT BUTTON */
 .delbtn{width:100%;padding:11px;border-radius:11px;font-size:13px;font-weight:700;
   background:rgba(248,113,113,.1);color:var(--red);border:1.5px solid rgba(248,113,113,.25);
-  margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+  margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
 .delbtn:active{background:rgba(248,113,113,.2)}
+
+/* FOCUS STATES */
+button:focus-visible,a:focus-visible,input:focus-visible,.fp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* REDUCED MOTION */
+@media(prefers-reduced-motion:reduce){
+  .radar-ring,.fc-dot,.spinner{animation:none!important}
+  .fp,.abtn,.csheet,.peek-card,.toast{transition:none!important;animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -219,10 +228,10 @@ input,textarea{font-family:inherit}
 <div id="app">
   <div id="zH">
     <div class="search-pill">
-      <span class="sp-icon">🔍</span>
-      <input id="searchInput" class="sp-input" placeholder="EventSpot Zürich" autocomplete="off" oninput="onSearch(this.value)">
-      <button class="sp-clear" id="searchClear" onclick="clearSearch()">✕</button>
-      <div id="spAvatar" class="sp-avatar" onclick="avatarTap()">👤</div>
+      <span class="sp-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input id="searchInput" class="sp-input" placeholder="EventSpot Zürich" autocomplete="off" aria-label="Events suchen" oninput="onSearch(this.value)">
+      <button class="sp-clear" id="searchClear" aria-label="Suche löschen" onclick="clearSearch()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div id="spAvatar" class="sp-avatar" role="button" aria-label="Profil" onclick="avatarTap()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
     </div>
     <div class="filter-pills" id="filterPills"></div>
     <div id="dateRow"></div>
@@ -287,7 +296,9 @@ var IC = {
   nav: function(z){return _s('<polygon points="3 11 22 2 13 21 11 13 3 11"/>',z)},
   pin: function(z){return _s('<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',z)},
   cross: function(z){return _s('<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>',z)},
-  share: function(z){return _s('<path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>',z)}
+  share: function(z){return _s('<path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>',z)},
+  search: function(z){return _s('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',z)},
+  user: function(z){return _s('<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',z)}
 };
 
 /* =====================
@@ -318,6 +329,70 @@ function mkIcon(emoji) {
     + '<text x="22" y="36" text-anchor="middle" font-size="32">' + emoji + '</text>'
     + '</svg>';
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+/* Duration string to hours (upper bound) */
+function durToHours(dur) {
+  if (!dur) return 2;
+  if (dur.indexOf('< 1') >= 0) return 1;
+  if (dur.indexOf('1-2') >= 0) return 2;
+  if (dur.indexOf('3-5') >= 0) return 5;
+  if (dur.indexOf('Ganzer Tag') >= 0) return 18;
+  return 2;
+}
+
+/* Get expiry Date for an event */
+function getExpiry(ev) {
+  if (ev.expiresAt && ev.expiresAt.toDate) return ev.expiresAt.toDate();
+  if (ev.type === 'spontaneous') {
+    if (ev.createdAt && ev.createdAt.toDate) {
+      var created = ev.createdAt.toDate();
+      var durPart = (ev.time || '').split('\u00b7').pop().trim();
+      return new Date(created.getTime() + durToHours(durPart) * 3600000);
+    }
+    return null;
+  }
+  if (ev.type === 'planned' && ev.eventDate) {
+    var tp = (ev.time || '').replace(' Uhr', '').trim();
+    var h = 0, mi = 0;
+    if (tp.indexOf(':') >= 0) { var pp = tp.split(':'); h = parseInt(pp[0]) || 0; mi = parseInt(pp[1]) || 0; }
+    var d = new Date(ev.eventDate + 'T' + String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0') + ':00');
+    return new Date(d.getTime() + 3 * 3600000);
+  }
+  return null;
+}
+
+function isExpired(ev) {
+  var exp = getExpiry(ev);
+  return exp ? exp.getTime() < Date.now() : false;
+}
+
+function timeLeft(ev) {
+  var exp = getExpiry(ev);
+  if (!exp) return '';
+  var diff = exp.getTime() - Date.now();
+  if (diff <= 0) return 'Beendet';
+  if (diff < 60000) return 'Noch <1 Min';
+  if (diff < 3600000) return 'Noch ' + Math.ceil(diff / 60000) + ' Min';
+  var hrs = Math.floor(diff / 3600000);
+  var mins = Math.ceil((diff % 3600000) / 60000);
+  if (diff < 86400000) return 'Noch ' + hrs + ' Std' + (mins > 0 ? ' ' + mins + ' Min' : '');
+  return 'Noch ' + Math.ceil(diff / 86400000) + ' Tage';
+}
+
+/* Extend a spontaneous event (creator only) */
+function extendEvent(hours) {
+  if (!selEv || !user) return;
+  var curExp = getExpiry(selEv);
+  var base = (curExp && curExp.getTime() > Date.now()) ? curExp : new Date();
+  var newExp = new Date(base.getTime() + hours * 3600000);
+  db.collection('events').doc(selEv.id).update({
+    expiresAt: firebase.firestore.Timestamp.fromDate(newExp)
+  }).then(function() {
+    toast('Verlängert um ' + hours + ' Std');
+  }).catch(function() {
+    toast('Verlängerung fehlgeschlagen.');
+  });
 }
 
 /* =====================
@@ -452,7 +527,7 @@ function startListen() {
    FILTER & SEARCH
    ===================== */
 function getVis() {
-  var evs = events;
+  var evs = events.filter(function(e) { return !isExpired(e); });
   if (curFilter === 'spontaneous') evs = evs.filter(function(e){return e.type==='spontaneous'});
   else if (curFilter === 'planned') evs = evs.filter(function(e){return e.type==='planned'});
   else if (curFilter !== 'all') evs = evs.filter(function(e){return e.category===curFilter});
@@ -477,7 +552,7 @@ function getVis() {
 }
 
 function setFil(f) {
-  curFilter = f;
+  curFilter = (curFilter === f && f !== 'all') ? 'all' : f;
   syncMarkers();
   drawFilter();
   drawHud();
@@ -796,10 +871,12 @@ function renderFeed() {
     var cat = CATS[ev.category] || CATS.community;
     var dist = myPos ? fmtDist(Math.round(hav(myPos.lat, myPos.lng, ev.lat, ev.lng))) : '';
     var sp = ev.type === 'spontaneous';
+    var tl = timeLeft(ev);
     var meta = sp
-      ? '<span class="fc-live"><span class="fc-dot"></span> LIVE</span>'
+      ? '<span class="fc-live"><span class="fc-dot"></span> LIVE' + (tl ? ' · ' + tl : '') + '</span>'
       : '<span class="fc-date">📅 ' + esc(ev.eventDate || '') + '</span>';
-    if (ev.time) meta += '<span>·</span><span>' + esc(ev.time) + '</span>';
+    if (!sp && ev.time) meta += '<span>·</span><span>' + esc(ev.time) + '</span>';
+    if (!sp && tl) meta += '<span>·</span><span style="color:var(--accent2)">' + tl + '</span>';
     return '<div class="fc" onclick="pickEvent(\'' + ev.id + '\')">'
       + '<div class="fc-emoji">' + cat.emoji + '</div>'
       + '<div class="fc-body">'
@@ -885,6 +962,8 @@ function submitEv() {
   var save = function(lat, lng) {
     var data;
     if (et === 'planned') {
+      var planDate = new Date(ed + 'T' + eti + ':00');
+      var planExp = new Date(planDate.getTime() + 3 * 3600000);
       data = {
         name: n, type: 'planned', category: c, lat: lat, lng: lng,
         eventDate: ed,
@@ -892,16 +971,19 @@ function submitEv() {
         description: de || 'Geplantes Event in Zürich',
         infoUrl: el || null,
         confirmed: 1, declined: 0, postedBy: poster, postedByUid: uid,
+        expiresAt: firebase.firestore.Timestamp.fromDate(planExp),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
     } else {
+      var spontExp = new Date(Date.now() + durToHours(du) * 3600000);
       data = {
         name: n, type: 'spontaneous', category: c, lat: lat, lng: lng,
         eventDate: todayStr,
-        time: 'Jetzt · ' + du,
+        time: 'Jetzt \u00b7 ' + du,
         description: de || 'Neues Event in der Nähe!',
         infoUrl: el || null,
         confirmed: 1, declined: 0, postedBy: poster, postedByUid: uid,
+        expiresAt: firebase.firestore.Timestamp.fromDate(spontExp),
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
     }
@@ -951,9 +1033,9 @@ function drawHeader() {
   var el = document.getElementById('spAvatar');
   if (!el) return;
   if (user && !user.isAnonymous && user.photoURL) {
-    el.innerHTML = '<img src="' + user.photoURL + '" alt="" onerror="this.parentElement.textContent=\'👤\'">';
+    el.innerHTML = '<img src="' + user.photoURL + '" alt="Profil" onerror="this.parentElement.innerHTML=IC.user(16)">';
   } else {
-    el.textContent = '👤';
+    el.innerHTML = IC.user(16);
   }
   drawFilter();
   drawDateRow();
@@ -984,7 +1066,7 @@ function drawFilter() {
 
 function drawHud() {
   var bot = sheetState === 'peek' ? 216 : 60;
-  var h = '<button class="locbtn" style="bottom:calc(' + bot + 'px + var(--bot))" onclick="goToMe()">' + IC.cross(18) + '</button>';
+  var h = '<button class="locbtn" aria-label="Mein Standort" style="bottom:calc(' + bot + 'px + var(--bot))" onclick="goToMe()">' + IC.cross(18) + '</button>';
   if (events.length === 0 && !selEv) {
     h += '<div class="feed-empty" style="position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);pointer-events:none"><div style="font-size:28px;margin-bottom:6px">📍</div>Noch keine Events.<br>Tippe <b>+ Neu</b> um das erste zu melden!</div>';
   }
@@ -1018,7 +1100,7 @@ function drawCard() {
       + '<div class="peek-title">' + esc(s.name) + '</div>'
       + '<div class="peek-meta">' + tbadge + (dist ? '<span>·</span><span>' + dist + '</span>' : '') + '</div>'
       + '</div>'
-      + '<button class="closex" onclick="event.stopPropagation();closeCard()">' + IC.x(12) + '</button>'
+      + '<button class="closex" aria-label="Schliessen" onclick="event.stopPropagation();closeCard()">' + IC.x(12) + '</button>'
       + '</div></div>';
 
     // Swipe-up to expand
@@ -1054,10 +1136,11 @@ function drawCard() {
   var vtxt = v==='checking' ? 'Standort wird geprüft…' : ok ? 'Du bist in der Nähe ✓' : v==='too_far' ? 'Zu weit weg' : v==='denied' ? 'Standort verweigert' : 'Nicht verfügbar';
   var vsub = v==='checking' ? 'Einen Moment…' : ok ? 'Du kannst jetzt abstimmen.' : v==='too_far' ? 'Innerhalb 300m zum Abstimmen.' : v==='denied' ? 'Erlaube Standortzugriff.' : 'GPS nicht verfügbar.';
   var dis = ok ? '' : ' off';
+  var tl = timeLeft(s);
 
   el.innerHTML = '<div class="cbg" onclick="closeCard()"></div><div class="csheet" onclick="event.stopPropagation()"><div class="cin">'
     + '<div class="grab"></div>'
-    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap"><span class="badge" style="background:'+tc+'22;color:'+tc+'">'+IC[cat.icon](9)+' '+(sp?'Spontan':'Geplant')+'</span><span class="badge" style="background:var(--raised);color:var(--t2)">'+cat.label+'</span>'+(dist?'<span class="badge" style="background:var(--raised);color:var(--accent2)">'+IC.pin(8)+' '+dist+'</span>':'')+'</div><h2 class="ctitle">'+esc(s.name)+'</h2></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="closex" onclick="shareEvent()">'+IC.share(12)+'</button><button class="closex" onclick="closeCard()">'+IC.x(12)+'</button></div></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap"><span class="badge" style="background:'+tc+'22;color:'+tc+'">'+IC[cat.icon](9)+' '+(sp?'Spontan':'Geplant')+'</span><span class="badge" style="background:var(--raised);color:var(--t2)">'+cat.label+'</span>'+(dist?'<span class="badge" style="background:var(--raised);color:var(--accent2)">'+IC.pin(8)+' '+dist+'</span>':'')+(tl?'<span class="badge" style="background:var(--accent)22;color:var(--accent2)">'+IC.clock(8)+' '+tl+'</span>':'')+'</div><h2 class="ctitle">'+esc(s.name)+'</h2></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="closex" aria-label="Teilen" onclick="shareEvent()">'+IC.share(12)+'</button><button class="closex" aria-label="Schliessen" onclick="closeCard()">'+IC.x(12)+'</button></div></div>'
     + '<div class="cmeta" style="margin-bottom:7px"><span style="display:flex;align-items:center;gap:3px;font-weight:500">'+IC.clock(10)+' '+esc(s.time||'')+'</span><span style="color:var(--t3);font-size:10px">'+IC.eye(9)+' '+esc(s.postedBy||'Anonym')+' · '+posted+'</span></div>'
     + '<p class="cdesc" style="border-color:'+tc+';margin-bottom:10px">'+esc(s.description||'')+'</p>'
     + (s.infoUrl ? '<a href="' + esc(s.infoUrl) + '" target="_blank" rel="noopener" class="info-link" onclick="event.stopPropagation()">🔗 Mehr Infos</a>' : '')
@@ -1068,6 +1151,7 @@ function drawCard() {
         : '<div class="vbox" style="background:'+vbg+';border-color:'+vbd+'"><div class="vico" style="background:'+vibg+';color:'+vic+'">'+vih+'</div><div style="flex:1"><div class="vt" style="color:'+vic+'">'+vtxt+'</div><div class="vsub">'+vsub+'</div></div></div>'
           + '<div class="acts"><button class="abtn ayes'+dis+'" onclick="doConfirm()">'+IC.check(14)+' Bestätigen</button><button class="abtn ano'+dis+'" onclick="doDecline()">'+IC.xc(14)+' Ablehnen</button></div>'
       )
+    + (isOwner && sp ? '<div style="margin-top:10px;padding:10px;background:var(--surface);border-radius:11px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Event verlängern</div><div style="display:flex;gap:6px"><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(1)">+1 Std</button><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(2)">+2 Std</button><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(3)">+3 Std</button></div></div>' : '')
     + (isOwner ? '<button class="delbtn" onclick="deleteEvent()">'+IC.xc(14)+' Event beenden</button>' : '')
     + '</div></div>';
   var _sheet = el.querySelector('.csheet');
@@ -1221,6 +1305,13 @@ setTimeout(function() {
   s.classList.add('gone');
   setTimeout(function() { s.remove(); }, 600);
 }, 900);
+
+/* Refresh UI every 60s so countdowns + expiry stay current */
+setInterval(function() {
+  syncMarkers();
+  renderFeed();
+  if (selEv && cardMode !== 'none') drawCard();
+}, 60000);
 </script>
 </body>
 </html>
