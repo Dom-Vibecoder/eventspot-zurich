@@ -989,8 +989,9 @@ function submitEv() {
     db.collection('events').add(data).then(function() {
       closeMod();
       toast(et === 'planned' ? '📅 Event geplant!' : '🎉 Event gemeldet!');
-    }).catch(function() {
-      toast('⚠️ Event konnte nicht gespeichert werden. Bitte prüfe deine Verbindung.');
+    }).catch(function(err) {
+      console.error('Firestore write failed:', err);
+      toast('⚠️ Fehler: ' + (err.code || err.message || 'Unbekannt'));
     });
   };
 
