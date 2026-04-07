@@ -338,6 +338,8 @@ function durToHours(dur) {
   if (dur.indexOf('1-2') >= 0) return 2;
   if (dur.indexOf('3-5') >= 0) return 5;
   if (dur.indexOf('Ganzer Tag') >= 0) return 18;
+  var m = dur.match(/(\d+)\s*Std/);
+  if (m) return parseInt(m[1]);
   return 2;
 }
 
@@ -383,15 +385,17 @@ function timeLeft(ev) {
 /* Extend a spontaneous event (creator only) */
 function extendEvent(hours) {
   if (!selEv || !user) return;
+  var created = selEv.createdAt && selEv.createdAt.toDate ? selEv.createdAt.toDate() : new Date();
   var curExp = getExpiry(selEv);
   var base = (curExp && curExp.getTime() > Date.now()) ? curExp : new Date();
-  var newExp = new Date(base.getTime() + hours * 3600000);
+  var newEnd = new Date(base.getTime() + hours * 3600000);
+  var totalH = Math.ceil((newEnd.getTime() - created.getTime()) / 3600000);
   db.collection('events').doc(selEv.id).update({
-    expiresAt: newExp
+    time: 'Jetzt \u00b7 ~' + totalH + ' Std'
   }).then(function() {
-    toast('Verlängert um ' + hours + ' Std');
+    toast('Verl\u00e4ngert um ' + hours + ' Std');
   }).catch(function() {
-    toast('Verlängerung fehlgeschlagen.');
+    toast('Verl\u00e4ngerung fehlgeschlagen.');
   });
 }
 
@@ -962,8 +966,6 @@ function submitEv() {
   var save = function(lat, lng) {
     var data;
     if (et === 'planned') {
-      var planDate = new Date(ed + 'T' + eti + ':00');
-      var planExp = new Date(planDate.getTime() + 3 * 3600000);
       data = {
         name: n, type: 'planned', category: c, lat: lat, lng: lng,
         eventDate: ed,
@@ -971,11 +973,9 @@ function submitEv() {
         description: de || 'Geplantes Event in Zürich',
         infoUrl: el || null,
         confirmed: 1, declined: 0, postedBy: poster, postedByUid: uid,
-        expiresAt: planExp,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
     } else {
-      var spontExp = new Date(Date.now() + durToHours(du) * 3600000);
       data = {
         name: n, type: 'spontaneous', category: c, lat: lat, lng: lng,
         eventDate: todayStr,
@@ -983,7 +983,6 @@ function submitEv() {
         description: de || 'Neues Event in der Nähe!',
         infoUrl: el || null,
         confirmed: 1, declined: 0, postedBy: poster, postedByUid: uid,
-        expiresAt: spontExp,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
     }
