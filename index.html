@@ -358,6 +358,10 @@ function getExpiry(ev) {
     var tp = (ev.time || '').replace(' Uhr', '').trim();
     var h = 0, mi = 0;
     if (tp.indexOf(':') >= 0) { var pp = tp.split(':'); h = parseInt(pp[0]) || 0; mi = parseInt(pp[1]) || 0; }
+    if (h === 0 && mi === 0 && !tp) {
+      // No time set (e.g. research events) — expire at end of eventDate
+      return new Date(ev.eventDate + 'T23:59:59');
+    }
     var d = new Date(ev.eventDate + 'T' + String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0') + ':00');
     return new Date(d.getTime() + 3 * 3600000);
   }
@@ -433,7 +437,7 @@ var authShown = true;
 var votes = {};
 try { votes = JSON.parse(localStorage.getItem('ev_votes') || '{}'); } catch(e) {}
 
-var dateFilter = null;      // null | 'YYYY-MM-DD' | ['YYYY-MM-DD','YYYY-MM-DD']
+var dateFilter = toDateStr(new Date());  // default to "Heute" on load
 var fType = 'spontaneous';  // modal: 'spontaneous' | 'planned'
 var fDate = '';             // modal: planned event date
 var fTime = '';             // modal: planned event time
