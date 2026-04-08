@@ -217,16 +217,17 @@ python scraper.py --days 60          # Scrape 60 days ahead (default: 30)
 
 ### Phase 2 — Real Data (IN PROGRESS)
 - [ ] AI event research tool — local Python script using **Scrapling** library
-  - **Status:** Gemeinde scraper WORKING (tested: 17 real events from Üetikon). Ron Orp returns empty (SPA too complex, needs more work). Needs Firebase service account key to write to Firestore.
-  - **What works:** `python scraper.py --dry-run --source gemeinde` finds events with names, dates, locations, detail links
+  - **Status:** Gemeinde scraper WORKING + TESTED. 17 real events written to Firestore on 2026-04-08 from Üetikon am See. Firebase service account key is in place. Deduplication works (re-run skips existing events).
+  - **What works:** Gemeinde scraper end-to-end (scrape → parse → geocode → dedup → Firestore write). `run.bat` double-click workflow.
   - **What doesn't work yet:** Ron Orp (SPA content comes back empty via StealthyFetcher), Eventfrog (not built yet), Stadt Zürich (not built yet)
-  - **Dependencies installed on Domenic's machine:** `scrapling[all]`, `firebase-admin`, `playwright`, `requests` + Chromium browser via `playwright install chromium`
+  - **Dependencies installed on Domenic's machine:** `scrapling[all]`, `firebase-admin`, `playwright`, `requests` + Chromium browser
   - **Next steps:**
-    1. Domenic downloads Firebase service account key → test real Firestore writes
-    2. Fix Ron Orp scraper (investigate SPA rendering / try different page URLs)
+    1. Fix Ron Orp scraper (investigate SPA rendering / try different page URLs or API endpoints)
+    2. Add more Gemeinden (uncomment/add lines in `sources/gemeinde.py` — same platform, just different URLs)
     3. Add Eventfrog + Stadt Zürich scrapers
-    4. Add more Gemeinden (uncomment lines in `sources/gemeinde.py`)
+    4. Improve geocoding accuracy (currently all events geocode to general "Üetikon am See" area — could use venue-specific addresses)
   - **Skip filter:** `category_map.py` auto-skips non-events (Altpapier, Karton, Sonderabfälle, etc.)
+  - **Category mapping:** Checks both organizer name AND event name for keywords (e.g. "Djembé-Treff" → music, "Frühlingsfest" → party)
 
 ### Phase 2.5 — UX Polish
 - [ ] Default to "Heute" date filter on load (users see today's events first)
