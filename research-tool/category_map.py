@@ -57,12 +57,17 @@ SKIP_KEYWORDS = [
     'abfallkalender', 'entsorgung',
 ]
 
+# Exact names that are recycling/waste collection, not events
+SKIP_EXACT = ['metall', 'papier', 'karton', 'grüngut', 'kehricht']
+
 
 def should_skip(event_name):
     """Return True if the event name looks like a municipal service, not an event."""
     if not event_name:
         return False
     text = event_name.lower().strip()
+    if text in SKIP_EXACT:
+        return True
     return any(kw in text for kw in SKIP_KEYWORDS)
 
 

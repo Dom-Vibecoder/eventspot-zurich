@@ -15,10 +15,11 @@ from category_map import map_category
 # Gemeinde sources: (name, base_url, region_hint for geocoding)
 GEMEINDE_SOURCES = [
     ("Gemeinde Üetikon am See", "https://www.uetikonamsee.ch/anlaesseaktuelles", "Üetikon am See, Schweiz"),
-    # Add more Gemeinden here as needed:
-    # ("Gemeinde Meilen", "https://www.meilen.ch/anlaesseaktuelles", "Meilen, Schweiz"),
+    ("Gemeinde Meilen", "https://www.meilen.ch/anlaesseaktuelles", "Meilen, Schweiz"),
+    # Add more Gemeinden here — same platform, just change URL + name:
     # ("Gemeinde Männedorf", "https://www.maennedorf.ch/anlaesseaktuelles", "Männedorf, Schweiz"),
     # ("Gemeinde Küsnacht", "https://www.kuesnacht.ch/anlaesseaktuelles", "Küsnacht, Schweiz"),
+    # Note: Stäfa uses a different platform (not compatible with this scraper)
 ]
 
 
