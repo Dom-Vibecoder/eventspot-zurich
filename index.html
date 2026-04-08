@@ -370,7 +370,12 @@ function getExpiry(ev) {
 
 function isExpired(ev) {
   var exp = getExpiry(ev);
-  return exp ? exp.getTime() < Date.now() : false;
+  if (exp) return exp.getTime() < Date.now();
+  // No expiry calculable — fall back to createdAt: expire after 24h
+  if (ev.createdAt && ev.createdAt.toDate) {
+    return (Date.now() - ev.createdAt.toDate().getTime()) > 86400000;
+  }
+  return true; // No expiry and no createdAt — treat as expired
 }
 
 function timeLeft(ev) {
