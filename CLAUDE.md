@@ -23,6 +23,8 @@ A web app for discovering spontaneous and planned local events in Zürich. Full-
 - **Firebase Auth** — Google sign-in + anonymous
 - **Vercel** — hosting (auto-deploy from GitHub main branch)
 - **PWA** — service worker + manifest
+- **Scrapling** — Python scraping library for AI research tool (`research-tool/`)
+- **Firebase Admin SDK** — server-side Firestore writes from research tool
 - **Community Skills** — installed at `.claude/skills/` (ui-ux-pro-max, ui-ux-designer, etc.)
 
 ---
@@ -104,6 +106,8 @@ Google Maps is destroyed if its parent div is removed. This was the #1 recurring
 - **Event cards:** Tap marker → peek card with slide-up, expand to full, swipe-down to close, share button
 - **Voting:** Confirm/decline within 300m, one vote per device (localStorage), Firestore sync with rollback
 - **Add event:** FAB → modal, spontaneous (duration) or planned (date+time required)
+- **Event auto-expiry:** Spontaneous events expire after their duration (1h/2h/5h/18h), planned events 3h after start. Live countdown shown in feed and cards ("LIVE · Noch 45 Min"). UI refreshes every 60s. Expired events auto-hide from map/feed.
+- **Extend event:** Creators of spontaneous events can extend by +1/+2/+3 Std. Updates the `time` field (e.g. "Jetzt · ~4 Std"). No new Firestore fields needed — `durToHours()` parses extended format.
 - **Share:** Native Web Share API + clipboard fallback, deep links via `#event=<id>` in URL hash
 - **Auth:** Google sign-in or anonymous, SVG avatar fallback
 - **PWA:** Installable, service worker
@@ -122,6 +126,8 @@ vState = 'idle'         // verify: idle|checking|nearby|too_far|denied|unavailab
 myPos = null            // {lat,lng}
 dateFilter = null       // null | 'YYYY-MM-DD' | ['start','end']
 deepLinkHandled = false // prevents re-trigger on Firestore snapshots
+// Expiry functions: durToHours(), getExpiry(), isExpired(), timeLeft(), extendEvent()
+// 60s setInterval refreshes UI for live countdowns
 ```
 
 ---
@@ -129,14 +135,68 @@ deepLinkHandled = false // prevents re-trigger on Firestore snapshots
 ## Firestore Data
 - Collection: `events`, ordered by `createdAt desc`
 - Fields: `name`, `type`, `category`, `lat`, `lng`, `time`, `description`, `confirmed`, `declined`, `postedBy`, `postedByUid`, `createdAt`, `eventDate`, `infoUrl`
+- **Do NOT add new fields** — Firestore rules reject unknown fields. Use existing fields creatively (e.g. extend uses `time` field).
 
 ---
 
 ## Known Issues & Notes
 - **Markers disappearing** = innerHTML replacement near map div. Use zone rendering.
 - **Local dev:** Add `localhost` + `127.0.0.1` to Google Cloud API key + Firebase authorized domains
+- **Firestore rules:** Updated 2026-04-07 — test mode rules had expired. Now using proper rules: public read, auth required for create/update, only creator can delete. Rules are in Firebase Console → Firestore → Rules.
+- **Expiry is client-side only** — no `expiresAt` field in Firestore (rules reject unknown fields). Expiry calculated from `createdAt` + parsed duration. Extend works by updating the `time` field.
 - **Image upload:** BLOCKED — Firebase Storage not activated. Needs: activate in console (europe-west6), set rules (5MB limit, auth required), add SDK script tag, then build upload UI
 - **Windows Python scripts:** Use `PYTHONIOENCODING=utf-8` prefix when running `.claude/skills/` Python scripts (Windows cp1252 encoding breaks emoji output)
+
+---
+
+## Research Tool (`research-tool/`)
+
+Local Python script that scrapes Zürich event websites and writes to Firestore.
+
+### File Structure
+```
+research-tool/
+├── setup.bat                 # Double-click to install everything (first time only)
+├── run.bat                   # Double-click to run scraper (menu with options)
+├── README.txt                # Quick guide for Domenic
+├── scraper.py                # Main entry: orchestrates sources, dedup, Firestore writes
+├── category_map.py           # Maps scraped categories → EventSpot's 9 categories + skip filter
+├── geocoder.py               # Address → lat/lng via Google Maps Geocoding API
+├── requirements.txt          # scrapling[all], firebase-admin, requests
+├── .gitignore                # Excludes service-account-key.json
+├── service-account-key.json  # Firebase Admin credentials (GITIGNORED, NOT in repo)
+└── sources/
+    ├── gemeinde.py           # Gemeinde calendar scraper — WORKING (tested 17 events)
+    └── ronorp.py             # Ron Orp event scraper — NOT WORKING YET (SPA empty)
+```
+
+### Usage (simple .bat scripts for Domenic)
+1. **First time:** Double-click `setup.bat` → installs everything automatically
+2. **Get Firebase key:** Firebase Console → Project Settings → Service Accounts → Generate New Private Key → save as `service-account-key.json` in the `research-tool/` folder
+3. **Run:** Double-click `run.bat` → choose option 1 (preview) or 2 (scrape + add to app)
+
+### Advanced usage (terminal)
+```bash
+cd research-tool
+python scraper.py --dry-run          # Preview without writing to Firestore
+python scraper.py                    # Scrape all sources → write to Firestore
+python scraper.py --source gemeinde  # Scrape only Gemeinde calendars
+python scraper.py --source ronorp    # Scrape only Ron Orp
+python scraper.py --days 60          # Scrape 60 days ahead (default: 30)
+```
+
+### How it works
+1. Scrapling `StealthyFetcher`/`DynamicFetcher` loads JS-rendered pages
+2. CSS selectors extract event title, date, time, location, category
+3. `category_map.py` maps to EventSpot's 9 categories
+4. `geocoder.py` converts addresses → lat/lng (Google Maps Geocoding API)
+5. Deduplication checks Firestore (name + date) before inserting
+6. Firebase Admin SDK writes events with `postedBy: "EventSpot Research · via {source}"`
+
+### Prerequisites
+1. Service account key: Firebase Console → Project Settings → Service Accounts → Generate New Private Key → save as `research-tool/service-account-key.json`
+2. Geocoding API enabled in Google Cloud Console (same project as Maps API)
+3. Python 3.10+
 
 ---
 
@@ -151,11 +211,26 @@ deepLinkHandled = false // prevents re-trigger on Firestore snapshots
 - [x] Vercel hosting
 - [x] Filter toggle (click to deselect)
 - [x] UI/UX audit: accessibility, touch targets, SVG icons, contrast, cursor states
+- [x] Event auto-expiry + live countdowns + extend feature
+- [x] Firestore security rules (proper auth-based rules)
 - [ ] Image upload ← BLOCKED on Firebase Storage
-- [ ] Event auto-expiry (spontaneous >24h, planned after date)
 
-### Phase 2 — Real Data
-- [ ] AI scraper (Ron Orp, Eventfrog)
+### Phase 2 — Real Data (IN PROGRESS)
+- [ ] AI event research tool — local Python script using **Scrapling** library
+  - **Status:** Gemeinde scraper WORKING (tested: 17 real events from Üetikon). Ron Orp returns empty (SPA too complex, needs more work). Needs Firebase service account key to write to Firestore.
+  - **What works:** `python scraper.py --dry-run --source gemeinde` finds events with names, dates, locations, detail links
+  - **What doesn't work yet:** Ron Orp (SPA content comes back empty via StealthyFetcher), Eventfrog (not built yet), Stadt Zürich (not built yet)
+  - **Dependencies installed on Domenic's machine:** `scrapling[all]`, `firebase-admin`, `playwright`, `requests` + Chromium browser via `playwright install chromium`
+  - **Next steps:**
+    1. Domenic downloads Firebase service account key → test real Firestore writes
+    2. Fix Ron Orp scraper (investigate SPA rendering / try different page URLs)
+    3. Add Eventfrog + Stadt Zürich scrapers
+    4. Add more Gemeinden (uncomment lines in `sources/gemeinde.py`)
+  - **Skip filter:** `category_map.py` auto-skips non-events (Altpapier, Karton, Sonderabfälle, etc.)
+
+### Phase 2.5 — UX Polish
+- [ ] Default to "Heute" date filter on load (users see today's events first)
+- [ ] "Add to Calendar" button on planned event cards (generates .ics file with event name, date, time, location/coordinates, description)
 
 ### Phase 3 — Engagement
 - [ ] Push notifications, user profiles, saved events
@@ -169,4 +244,4 @@ deepLinkHandled = false // prevents re-trigger on Firestore snapshots
 ---
 
 ## Owner
-Domenic, Zürich. Non-coder building with AI. Goal: validate concept with real users.
+Domenic, Zürich. **Non-technical, no coding experience** — building entirely with AI assistance. Needs clear, step-by-step instructions without jargon. Prefers simple .bat scripts over terminal commands. Goal: validate concept with real users.
