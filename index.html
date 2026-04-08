@@ -1126,6 +1126,7 @@ function drawCard() {
   var posted = ago(s.createdAt) || '';
 
   var isOwner = user && s.postedByUid && user.uid === s.postedByUid;
+  var isResearch = (s.postedBy||'').indexOf('EventSpot Research') === 0;
 
   var vbg = ok ? 'rgba(52,211,153,.08)' : v==='too_far' ? 'rgba(248,113,113,.08)' : 'var(--surface)';
   var vbd = ok ? '#34d39940' : v==='too_far' ? '#f8717140' : 'var(--raised)';
@@ -1144,11 +1145,14 @@ function drawCard() {
     + '<p class="cdesc" style="border-color:'+tc+';margin-bottom:10px">'+esc(s.description||'')+'</p>'
     + (s.infoUrl ? '<a href="' + esc(s.infoUrl) + '" target="_blank" rel="noopener" class="info-link" onclick="event.stopPropagation()">🔗 Mehr Infos</a>' : '')
     + (s.imageUrl ? '<img class="cimg" src="' + esc(s.imageUrl) + '" alt="" onclick="event.stopPropagation()">' : '')
-    + '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em">Glaubwürdigkeit</span><span style="font-size:9px;color:var(--t3)">'+(s.confirmed||0)+' ✓ · '+(s.declined||0)+' ✗</span></div><div class="ctrack"><div class="cfill" style="background:'+bc+';width:'+ratio+'%"></div></div></div>'
-    + (votes[s.id]
-        ? '<div style="padding:11px;background:'+(votes[s.id]==='confirm'?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)')+';border-radius:11px;border:1.5px solid '+(votes[s.id]==='confirm'?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';display:flex;align-items:center;justify-content:center;gap:8px"><span style="color:'+(votes[s.id]==='confirm'?'var(--green)':'var(--red)')+';font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px">'+(votes[s.id]==='confirm'?IC.check(14)+' Du hast bestätigt':IC.xc(14)+' Du hast abgelehnt')+'</span><span style="font-size:10px;color:var(--t3)">· 1× pro Event</span></div>'
-        : '<div class="vbox" style="background:'+vbg+';border-color:'+vbd+'"><div class="vico" style="background:'+vibg+';color:'+vic+'">'+vih+'</div><div style="flex:1"><div class="vt" style="color:'+vic+'">'+vtxt+'</div><div class="vsub">'+vsub+'</div></div></div>'
-          + '<div class="acts"><button class="abtn ayes'+dis+'" onclick="doConfirm()">'+IC.check(14)+' Bestätigen</button><button class="abtn ano'+dis+'" onclick="doDecline()">'+IC.xc(14)+' Ablehnen</button></div>'
+    + (isResearch
+        ? '<div style="padding:11px;background:rgba(124,106,255,.08);border-radius:11px;border:1.5px solid rgba(124,106,255,.2);display:flex;align-items:center;justify-content:center;gap:8px"><span style="color:var(--accent2);font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px">'+IC.check(14)+' Verifiziertes Event aus öffentlicher Quelle</span></div>'
+        : '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em">Glaubwürdigkeit</span><span style="font-size:9px;color:var(--t3)">'+(s.confirmed||0)+' ✓ · '+(s.declined||0)+' ✗</span></div><div class="ctrack"><div class="cfill" style="background:'+bc+';width:'+ratio+'%"></div></div></div>'
+          + (votes[s.id]
+              ? '<div style="padding:11px;background:'+(votes[s.id]==='confirm'?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)')+';border-radius:11px;border:1.5px solid '+(votes[s.id]==='confirm'?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';display:flex;align-items:center;justify-content:center;gap:8px"><span style="color:'+(votes[s.id]==='confirm'?'var(--green)':'var(--red)')+';font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px">'+(votes[s.id]==='confirm'?IC.check(14)+' Du hast bestätigt':IC.xc(14)+' Du hast abgelehnt')+'</span><span style="font-size:10px;color:var(--t3)">· 1× pro Event</span></div>'
+              : '<div class="vbox" style="background:'+vbg+';border-color:'+vbd+'"><div class="vico" style="background:'+vibg+';color:'+vic+'">'+vih+'</div><div style="flex:1"><div class="vt" style="color:'+vic+'">'+vtxt+'</div><div class="vsub">'+vsub+'</div></div></div>'
+                + '<div class="acts"><button class="abtn ayes'+dis+'" onclick="doConfirm()">'+IC.check(14)+' Bestätigen</button><button class="abtn ano'+dis+'" onclick="doDecline()">'+IC.xc(14)+' Ablehnen</button></div>'
+            )
       )
     + (isOwner && sp ? '<div style="margin-top:10px;padding:10px;background:var(--surface);border-radius:11px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Event verlängern</div><div style="display:flex;gap:6px"><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(1)">+1 Std</button><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(2)">+2 Std</button><button class="abtn" style="background:var(--glow);color:var(--accent2);border:1.5px solid var(--accent);font-size:12px;padding:8px" onclick="extendEvent(3)">+3 Std</button></div></div>' : '')
     + (isOwner ? '<button class="delbtn" onclick="deleteEvent()">'+IC.xc(14)+' Event beenden</button>' : '')
