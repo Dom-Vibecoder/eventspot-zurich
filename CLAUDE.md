@@ -158,6 +158,7 @@ Local Python script that scrapes Zürich event websites and writes to Firestore.
 research-tool/
 ├── setup.bat                 # Double-click to install everything (first time only)
 ├── run.bat                   # Double-click to run scraper (menu with options)
+├── scheduled-run.bat         # For Windows Task Scheduler (automatic daily runs)
 ├── README.txt                # Quick guide for Domenic
 ├── scraper.py                # Main entry: orchestrates sources, dedup, Firestore writes
 ├── category_map.py           # Maps scraped categories → EventSpot's 9 categories + skip filter
@@ -166,7 +167,7 @@ research-tool/
 ├── .gitignore                # Excludes service-account-key.json
 ├── service-account-key.json  # Firebase Admin credentials (GITIGNORED, NOT in repo)
 └── sources/
-    ├── gemeinde.py           # Gemeinde calendar scraper — WORKING (tested 17 events)
+    ├── gemeinde.py           # Gemeinde calendar scraper — WORKING (Üetikon + Meilen)
     └── ronorp.py             # Ron Orp event scraper — NOT WORKING YET (SPA empty)
 ```
 
@@ -217,20 +218,26 @@ python scraper.py --days 60          # Scrape 60 days ahead (default: 30)
 
 ### Phase 2 — Real Data (IN PROGRESS)
 - [ ] AI event research tool — local Python script using **Scrapling** library
-  - **Status:** Gemeinde scraper WORKING + TESTED. 17 real events written to Firestore on 2026-04-08 from Üetikon am See. Firebase service account key is in place. Deduplication works (re-run skips existing events).
-  - **What works:** Gemeinde scraper end-to-end (scrape → parse → geocode → dedup → Firestore write). `run.bat` double-click workflow.
-  - **What doesn't work yet:** Ron Orp (SPA content comes back empty via StealthyFetcher), Eventfrog (not built yet), Stadt Zürich (not built yet)
-  - **Dependencies installed on Domenic's machine:** `scrapling[all]`, `firebase-admin`, `playwright`, `requests` + Chromium browser
+  - **Status:** WORKING. Gemeinde scraper tested with 2 sources: Üetikon am See (17 events) + Meilen (12 events) = 29 events in Firestore. Firebase service account key in place. Deduplication works.
+  - **What works:** Gemeinde scraper end-to-end, `run.bat` + `scheduled-run.bat` for daily auto-runs
+  - **What doesn't work yet:** Ron Orp (SPA empty), Eventfrog (not built), Stadt Zürich (not built)
+  - **Stäfa:** Uses different platform (`staefa.ch`), NOT compatible with Gemeinde scraper — needs separate scraper
+  - **Scheduling:** `scheduled-run.bat` can be added to Windows Task Scheduler for daily automatic runs. Logs to `last-run.log`.
   - **Next steps:**
-    1. Fix Ron Orp scraper (investigate SPA rendering / try different page URLs or API endpoints)
-    2. Add more Gemeinden (uncomment/add lines in `sources/gemeinde.py` — same platform, just different URLs)
-    3. Add Eventfrog + Stadt Zürich scrapers
-    4. Improve geocoding accuracy (currently all events geocode to general "Üetikon am See" area — could use venue-specific addresses)
-  - **Skip filter:** `category_map.py` auto-skips non-events (Altpapier, Karton, Sonderabfälle, etc.)
-  - **Category mapping:** Checks both organizer name AND event name for keywords (e.g. "Djembé-Treff" → music, "Frühlingsfest" → party)
+    1. Fix Ron Orp scraper (SPA content empty — investigate API endpoints or different URLs)
+    2. Add more Gemeinden (just add lines in `sources/gemeinde.py` — same platform)
+    3. Build Stäfa scraper (different platform)
+    4. Add Eventfrog + Stadt Zürich scrapers
+    5. Improve geocoding accuracy (use venue-specific addresses)
+  - **Skip filter:** `category_map.py` auto-skips non-events (Altpapier, Karton, Metall, Papier, Sonderabfälle, etc.)
+  - **Category mapping:** Checks both organizer name AND event name for keywords
+  - **Verified badge:** Research events show "Verifiziertes Event aus öffentlicher Quelle" instead of voting buttons
+  - **Default Heute filter:** App loads with "Heute" date filter active, old events auto-expire (24h fallback)
 
 ### Phase 2.5 — UX Polish
-- [ ] Default to "Heute" date filter on load (users see today's events first)
+- [x] Default to "Heute" date filter on load (users see today's events first)
+- [x] Old events auto-expire (24h fallback for events without calculable expiry)
+- [x] Research events show verified badge instead of voting buttons
 - [ ] "Add to Calendar" button on planned event cards (generates .ics file with event name, date, time, location/coordinates, description)
 
 ### Phase 3 — Engagement
