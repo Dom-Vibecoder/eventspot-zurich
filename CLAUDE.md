@@ -221,14 +221,15 @@ python scraper.py --days 60          # Scrape 60 days ahead (default: 30)
   - **Status:** WORKING. Gemeinde scraper tested with 2 sources: Üetikon am See (17 events) + Meilen (12 events) = 29 events in Firestore. Firebase service account key in place. Deduplication works.
   - **What works:** Gemeinde scraper end-to-end, `run.bat` + `scheduled-run.bat` for daily auto-runs
   - **What doesn't work yet:** Ron Orp (SPA empty), Eventfrog (not built), Stadt Zürich (not built)
-  - **Stäfa:** Uses different platform (`staefa.ch`), NOT compatible with Gemeinde scraper — needs separate scraper
-  - **Scheduling:** `scheduled-run.bat` can be added to Windows Task Scheduler for daily automatic runs. Logs to `last-run.log`.
+  - **Stäfa:** Uses Fürenand platform — event page at `https://fuerenand.ch/gemeinden/9b9d61ad-2963-4df7-8657-9d162d5a7bbe/activities/events` — needs its own scraper (not same as Gemeinde calendar platform)
+  - **Scheduling:** `scheduled-run.bat` ready for Windows Task Scheduler but for now running manually via `run.bat`. Logs to `last-run.log`.
   - **Next steps:**
-    1. Fix Ron Orp scraper (SPA content empty — investigate API endpoints or different URLs)
-    2. Add more Gemeinden (just add lines in `sources/gemeinde.py` — same platform)
-    3. Build Stäfa scraper (different platform)
+    1. Build Stäfa/Fürenand scraper (`fuerenand.ch` events page — investigate structure first)
+    2. Fix Ron Orp scraper (SPA content empty — investigate API endpoints or different URLs)
+    3. Add more Gemeinden (just add lines in `sources/gemeinde.py` — same platform)
     4. Add Eventfrog + Stadt Zürich scrapers
     5. Improve geocoding accuracy (use venue-specific addresses)
+    6. Set up Windows Task Scheduler for daily automatic runs (when ready)
   - **Skip filter:** `category_map.py` auto-skips non-events (Altpapier, Karton, Metall, Papier, Sonderabfälle, etc.)
   - **Category mapping:** Checks both organizer name AND event name for keywords
   - **Verified badge:** Research events show "Verifiziertes Event aus öffentlicher Quelle" instead of voting buttons
